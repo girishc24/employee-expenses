@@ -6,5 +6,7 @@ urlpatterns = [
     path('adduser/', views.adduser, name='adduser'),
     path('viewprofile/', views.viewprofile, name='viewprofile'),
     path('editprofile/', views.editprofile, name='editprofile'),
+    path('categories/', views.categories, name='categories'),
+    path('subcategories/<int:pk>/', views.subcategories, name='subcategories'),
     
 ]

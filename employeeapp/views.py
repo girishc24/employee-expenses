@@ -7,8 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response  import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from . serializers import UserAddSerializers, EmployeeSerializers, UserSerializer, UserAddSerializersnew
-from .models import Employee
+from . serializers import UserAddSerializers, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import Employee,Category, Subcategory
+
 
 
 def welcome(request):
@@ -33,6 +36,43 @@ def adduser(request):
     
     else:
         return Response({'error': 'GET Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+
+@receiver(post_save, sender=User)
+def create_default_categories(sender, instance, created, **kwargs):
+    if created:
+        # Create default categories
+        travel_category = Category.objects.create(name='Travel', user=instance)
+        accomodation_category = Category.objects.create(name='Accommodation', user=instance)
+        food_category = Category.objects.create(name='Food Expenses', user=instance)
+        items_category = Category.objects.create(name='Items Purchased', user=instance)
+        miscellaneous_category = Category.objects.create(name='Miscellaneous', user=instance)
+
+        # Create subcategories for 'Travel'
+        Subcategory.objects.create(category=travel_category, name='Flight', user=instance)
+        Subcategory.objects.create(category=travel_category, name='Taxi', user=instance)
+        Subcategory.objects.create(category=travel_category, name='Bus', user=instance)
+        Subcategory.objects.create(category=travel_category, name='Train', user=instance)
+        Subcategory.objects.create(category=travel_category, name='Rapido', user=instance)
+        Subcategory.objects.create(category=travel_category, name='Ola', user=instance)
+        Subcategory.objects.create(category=travel_category, name='Uber', user=instance)
+        Subcategory.objects.create(category=travel_category, name='Namma Yatri', user=instance)
+        Subcategory.objects.create(category=travel_category, name='Others', user=instance)
+
+        # Create subcategories for 'Food Expenses'
+        Subcategory.objects.create(category=food_category, name='Breakfast', user=instance)
+        Subcategory.objects.create(category=food_category, name='Lunch', user=instance)
+        Subcategory.objects.create(category=food_category, name='Snacks', user=instance)
+        Subcategory.objects.create(category=food_category, name='Dinner', user=instance)
+
+        # Create subcategories for 'Miscellaneous'
+        Subcategory.objects.create(category=miscellaneous_category, name='Medical Expenses', user=instance)
+        Subcategory.objects.create(category=miscellaneous_category, name='Cell phone', user=instance)
+        Subcategory.objects.create(category=miscellaneous_category, name='Health & Wellness', user=instance)
+        Subcategory.objects.create(category=miscellaneous_category, name='Learning & Development', user=instance)
+        Subcategory.objects.create(category=miscellaneous_category, name='Entertainment / Refreshment', user=instance)
+
 
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
@@ -85,3 +125,24 @@ def editprofile(request):
 
     else:
         return Response({'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def categories(request):
+    if request.method == 'GET':
+        user = request.user.id
+        categories = Category.objects.filter(user_id=user).order_by('-id')
+        category_serializer = CategorySerializer(categories, many=True)
+        return Response(category_serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def subcategories(request, pk):
+    if request.method == 'GET':
+        subcategories = Subcategory.objects.filter(category_id=pk)
+        subcategory_serializer = SubcategorySerializer(subcategories, many=True)
+        return Response(subcategory_serializer.data, status=status.HTTP_200_OK)
+        
+        
