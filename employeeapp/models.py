@@ -43,6 +43,7 @@ class Expense(models.Model):
     ]
     created_date = models.DateField(auto_now_add=True)
     updated_date=models.DateField(auto_now=True)
+    user = models.ForeignKey(User, related_name='expenses', on_delete=models.CASCADE)
     expense_date = models.DateField(auto_now=False)
     amount = models.DecimalField( max_digits=10, decimal_places=2)
     category = models.ForeignKey("Category", on_delete=models.CASCADE)
@@ -50,5 +51,6 @@ class Expense(models.Model):
     payment =  models.CharField(max_length=50,  choices=STATUS_CHOICES, default='UPI')
     note = models.CharField(max_length=500, null=True, blank=True)
     proof = models.CharField( max_length=50, choices=STATUS_PROFF, default='RESPECTIVE BILL')
+    document = models.FileField(upload_to='employeeapp/images', max_length=100)
     
 

@@ -7,10 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response  import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from . serializers import UserAddSerializers, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer
+from rest_framework.views import APIView
+from . serializers import UserAddSerializers, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer, ExpenseSerializer
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import Employee,Category, Subcategory
+from .models import Employee,Category, Subcategory,  Expense
 
 
 
@@ -144,5 +145,26 @@ def subcategories(request, pk):
         subcategories = Subcategory.objects.filter(category_id=pk)
         subcategory_serializer = SubcategorySerializer(subcategories, many=True)
         return Response(subcategory_serializer.data, status=status.HTTP_200_OK)
-        
+
+
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class Expenses(APIView):
+    def post(self, request):
+        serializer = ExpenseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response (serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def get(self, request):
+        user = request.user.id
+        expenses = Expense.objects.filter(user_id=user)
+        expenses_serializer = ExpenseSerializer(expenses, many=True)
+        return Response(expenses_serializer.data, status=status.HTTP_200_OK)
+
+
+
         

@@ -8,5 +8,6 @@ urlpatterns = [
     path('editprofile/', views.editprofile, name='editprofile'),
     path('categories/', views.categories, name='categories'),
     path('subcategories/<int:pk>/', views.subcategories, name='subcategories'),
+    path('expenses/', views.Expenses.as_view()),
     
 ]

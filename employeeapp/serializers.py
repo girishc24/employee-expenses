@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from . models import Employee, Category, Subcategory
+from . models import Employee, Category, Subcategory, Expense
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from djoser.serializers  import UserSerializer, UserCreateSerializer
@@ -48,3 +48,13 @@ class SubcategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Subcategory
         fields = ['id','name']
+
+
+class ExpenseSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    subcategory = SubcategorySerializer()
+    class Meta:
+        model = Expense
+        fields = ['id', 'document', 'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof']
+    
+    
