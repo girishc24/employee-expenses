@@ -7,6 +7,7 @@ urlpatterns = [
     path('viewprofile/', views.viewprofile, name='viewprofile'),
     path('editprofile/', views.editprofile, name='editprofile'),
     path('categories/', views.categories, name='categories'),
+    path('addcategories/', views.Addcategory.as_view()),
     path('subcategories/<int:pk>/', views.subcategories, name='subcategories'),
     path('expenses/', views.Expenses.as_view()),
     

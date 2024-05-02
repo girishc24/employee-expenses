@@ -167,4 +167,6 @@ class Expenses(APIView):
 
 
 
-        
+class Addcategory(APIView):
+    def post(request):
+        pass
