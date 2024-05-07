@@ -52,5 +52,8 @@ class Expense(models.Model):
     note = models.CharField(max_length=500, null=True, blank=True)
     proof = models.CharField( max_length=50, choices=STATUS_PROFF, default='RESPECTIVE BILL')
     document = models.FileField(upload_to='employeeapp/images', max_length=100)
+
+    def __str__(self) -> str:
+        return self.category.name
     
 
