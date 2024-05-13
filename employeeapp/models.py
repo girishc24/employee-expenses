@@ -19,6 +19,7 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
 class Subcategory(models.Model):
     category = models.ForeignKey(Category, related_name='subcategories', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='subcategories', on_delete=models.CASCADE)
