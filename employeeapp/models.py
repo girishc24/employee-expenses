@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-# Create your models here.
+
 
 
 class Employee(models.Model):
@@ -8,6 +8,7 @@ class Employee(models.Model):
     phone = models.CharField(max_length=50, unique=True, null=False) 
     company = models.CharField(max_length=50,  null=True, blank=True) 
     designation = models.CharField(max_length=50, null=True, blank=True)
+    photo = models.FileField(upload_to='employeeapp/images', max_length=100, null=True, blank=True)
 
     def __str__(self) -> str:
         return self.user.username
@@ -39,7 +40,7 @@ class Expense(models.Model):
     STATUS_PROFF = [
         ('TAX INVOICE', 'TAX INVOICE'),
         ('NOT APPLICABLE', 'NOT APPLICABLE'),
-        ('VOUCHER ', 'VOUCHER'),
+        ('VOUCHER', 'VOUCHER'),
         ('RESPECTIVE BILL', 'RESPECTIVE BILL'),
     ]
     created_date = models.DateField(auto_now_add=True)
@@ -53,8 +54,51 @@ class Expense(models.Model):
     note = models.CharField(max_length=500, null=True, blank=True)
     proof = models.CharField( max_length=50, choices=STATUS_PROFF, default='RESPECTIVE BILL')
     document = models.FileField(upload_to='employeeapp/images', max_length=100)
+    archived =models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.category.name
     
 
+class Subscriptions(models.Model):
+    created_date = models.DateField(auto_now_add=True)
+    updated_date=models.DateField(auto_now=True)
+    duration = models.CharField(max_length=500)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+
+    def __str__(self) -> str:
+        return self.duration
+
+class Usersubscription(models.Model):
+    user = models.ForeignKey(User, related_name='subscription', on_delete=models.CASCADE)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    description = models.TextField()
+    
+    def __str__(self)-> str:
+        return self.user.username
+
+
+class Help(models.Model):
+    email=models.EmailField(max_length=200)
+    phone=models.CharField(max_length=50, unique=True, null=False) 
+    description=models.TextField()
+
+    def __str__(self) -> str:
+        return self.email
+
+class PrivacyPolicy(models.Model):
+    description=models.TextField()
+
+    def __str__(self)-> str:
+        return "Privacy Policy"
+
+class Faq(models.Model):
+    date=models.DateField(auto_now_add=True)
+    question=models.CharField(max_length=200, null=False, blank=False)
+    answer=models.TextField()
+
+    def __str__(self):
+        return self.question
+    
