@@ -329,3 +329,7 @@ class Faqview(APIView):
         faq = Faq.objects.all()
         faq_serializer = FaqSerializer(faq, many=True)
         return Response(faq_serializer.data, status=status.HTTP_200_OK)
+    
+
+def forgotpassword(request):
+    pass
