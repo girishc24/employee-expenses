@@ -140,20 +140,23 @@ def validate_otp(request):
 @permission_classes([IsAuthenticated])
 def viewprofile(request):
     if request.method == 'GET':
-        user = request.user.id
-        queryset = User.objects.filter(id=user)
-        user_serializers = UserSerializer(queryset, many=True)
-
+        user_id = request.user.id
         try:
-            employee = Employee.objects.get(user=user)
-            emp_serializers = EmployeeSerializers(employee)
-            employeedata = {
-                'user': user_serializers.data,
-                'employee': emp_serializers.data
-            }
-            return Response(employeedata, status=status.HTTP_200_OK)
-        except Employee.DoesNotExist:
-            return Response({"message": "Employee not found for this user."}, status=status.HTTP_404_NOT_FOUND)
+            user = User.objects.get(id=user_id)
+            user_serializer = UserSerializer(user)
+
+            try:
+                employee = Employee.objects.get(user=user)
+                emp_serializer = EmployeeSerializers(employee)
+                employeedata = {
+                    'user': user_serializer.data,
+                    'employee': emp_serializer.data
+                }
+                return Response(employeedata, status=status.HTTP_200_OK)
+            except Employee.DoesNotExist:
+                return Response({"message": "Employee not found for this user."}, status=status.HTTP_404_NOT_FOUND)
+        except User.DoesNotExist:
+            return Response({"message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
     else:
         return Response({'error': 'Invalid Method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
