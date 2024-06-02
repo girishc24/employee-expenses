@@ -335,4 +335,6 @@ class Faqview(APIView):
     
 
 def forgotpassword(request):
+    
     pass
+
