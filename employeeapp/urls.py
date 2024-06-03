@@ -21,5 +21,5 @@ urlpatterns = [
     path('help/', views.Helpview.as_view()),
     path('privacypolicy/',views.Privacypolicy.as_view()),
     path('faq/',views.Faqview.as_view()),
-    
+    path('forgotpassword/', views.forgotpassword, name='forgotpassword')
 ]

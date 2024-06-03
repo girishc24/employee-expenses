@@ -333,8 +333,22 @@ class Faqview(APIView):
         faq_serializer = FaqSerializer(faq, many=True)
         return Response(faq_serializer.data, status=status.HTTP_200_OK)
     
-
+@api_view(['POST'])
 def forgotpassword(request):
-    
-    pass
+    email = request.data.get('email')  # Accessing JSON data
+    if email:
+        if User.objects.filter(email=email).exists():
+            otp = ''.join(random.choices(string.digits, k=6))
+            send_mail(
+                'OTP Verification',
+                f'Your OTP is: {otp}',
+                'Forgot Password OTP',
+                [email],
+                fail_silently=False,
+            )
+            return Response({'message': 'OTP sent to your email', 'OTP': otp}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Email not found in the database'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        return Response({'error': 'Email not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
