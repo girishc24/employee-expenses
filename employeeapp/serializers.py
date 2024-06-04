@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from djoser.serializers  import UserSerializer, UserCreateSerializer
 
-class UserAddSerializers(serializers.ModelSerializer):
+class UserCreateSerializer(serializers.ModelSerializer):
     class  Meta:
         model  =  User
         fields = ['id','first_name','last_name','email','password']
@@ -37,7 +37,7 @@ class EmployeeSerializers(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id','username',  'email', 'first_name', 'last_name',]
+        fields = ['id','username',  'email', 'first_name', 'last_name']
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,6 +49,10 @@ class SubcategorySerializer(serializers.ModelSerializer):
         model = Subcategory
         fields = ['id','name']
 
+class AddsubcategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subcategory
+        fields = ['id','category','name','user']
 
 class ExpenseSerializer(serializers.ModelSerializer):
     

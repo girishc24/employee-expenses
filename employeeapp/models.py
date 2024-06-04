@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from .validators import validate_file_size
 
 
 class Employee(models.Model):
@@ -22,8 +22,8 @@ class Category(models.Model):
 
 
 class Subcategory(models.Model):
-    category = models.ForeignKey(Category, related_name='subcategories', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='subcategories', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, related_name='subcategories', on_delete=models.CASCADE, blank=True)
+    user = models.ForeignKey(User, related_name='subcategories', on_delete=models.CASCADE, blank=True)
     name = models.CharField(max_length=100)
 
     def __str__(self):
@@ -37,7 +37,7 @@ class Expense(models.Model):
         ('Credit/Dedit', 'Credit/Dedit'),
         ('Net Banking', 'Net Banking'),
     ]
-    STATUS_PROFF = [
+    STATUS_PROOF = [
         ('TAX INVOICE', 'TAX INVOICE'),
         ('NOT APPLICABLE', 'NOT APPLICABLE'),
         ('VOUCHER', 'VOUCHER'),
@@ -52,8 +52,8 @@ class Expense(models.Model):
     subcategory = models.ForeignKey("Subcategory", on_delete=models.CASCADE)
     payment =  models.CharField(max_length=50,  choices=STATUS_CHOICES, default='UPI')
     note = models.CharField(max_length=500, null=True, blank=True)
-    proof = models.CharField( max_length=50, choices=STATUS_PROFF, default='RESPECTIVE BILL')
-    document = models.FileField(upload_to='employeeapp/images', max_length=100)
+    proof = models.CharField( max_length=50, choices=STATUS_PROOF, default='RESPECTIVE BILL')
+    document = models.FileField(upload_to='employeeapp/images', max_length=100, validators=[validate_file_size])
     archived =models.BooleanField(default=False)
 
     def __str__(self) -> str:

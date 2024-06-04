@@ -12,9 +12,10 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response  import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.views import APIView
-from . serializers import UserAddSerializers, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer, ExpenseSerializer, SubscriptionSerialixer, HelpSerializer, PrivacyPolicySerializer, FaqSerializer, UsersubscriptionSerializer, ExpenseSerializerNew, ExpenseSerializerEdit, ExpenseSerializerview
+from . serializers import UserCreateSerializer, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer, ExpenseSerializer, SubscriptionSerialixer, HelpSerializer, PrivacyPolicySerializer, FaqSerializer, UsersubscriptionSerializer, ExpenseSerializerNew, ExpenseSerializerEdit, ExpenseSerializerview, AddsubcategorySerializer
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.cache import cache
 from .models import Employee,Category, Subcategory,  Expense, Subscriptions, Usersubscription, Help, PrivacyPolicy,Faq
 
 
@@ -25,7 +26,7 @@ def welcome(request):
 @api_view(['POST'])
 def adduser(request):
     if request.method == 'POST':
-        user_serializer = UserAddSerializers(data=request.data)
+        user_serializer = UserCreateSerializer(data=request.data)
         employee_serializers = EmployeeSerializers(data=request.data)
 
         if user_serializer.is_valid(raise_exception=True) and employee_serializers.is_valid(raise_exception=True):
@@ -77,6 +78,12 @@ def create_default_categories(sender, instance, created, **kwargs):
         Subcategory.objects.create(category=travel_category, name='Uber', user=instance)
         Subcategory.objects.create(category=travel_category, name='Namma Yatri', user=instance)
         Subcategory.objects.create(category=travel_category, name='Others', user=instance)
+
+        # Create subcategories for 'Travel'
+        Subcategory.objects.create(category=accomodation_category, name='Accommodation', user=instance)
+
+        # Create subcategories for 'Items Purchased'
+        Subcategory.objects.create(category=items_category, name='Items Purchased', user=instance)
 
         # Create subcategories for 'Food Expenses'
         Subcategory.objects.create(category=food_category, name='Breakfast', user=instance)
@@ -160,7 +167,6 @@ def viewprofile(request):
     else:
         return Response({'error': 'Invalid Method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -216,7 +222,7 @@ def subcategories(request, pk):
 class Expenses(APIView):
     def post(self, request):
         user = request.user  
-        print(user)
+        #print(user)
         request.data['user'] = user.id  
         serializer = ExpenseSerializer(data=request.data)
         if serializer.is_valid():
@@ -269,10 +275,22 @@ class Archive(APIView):
             return Response(expenses_serializer.data, status=status.HTTP_200_OK)
     
     
-
-class Addcategory(APIView):
-    def post(request):
-        pass
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class Addsubcategory(APIView):
+    def post(self, request):
+        user = request.user.id 
+        category = Category.objects.get(user=user, name='Miscellaneous')
+        category_id = category.id
+        request.data['category'] = category_id 
+        request.data['user'] = user  
+        serializer = AddsubcategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response (serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
 
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -315,27 +333,71 @@ def dashboardanalysis(request):
     else:
         return Response({'error': 'Invalid Method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class VerifyEmail(APIView):
+    def get(self, request):
+        email = request.user.email
+        if email:
+            otp = ''.join(random.choices(string.digits, k=6))
+            cache.set(f'otp_{request.user.id}', otp, timeout=300)  # store OTP in cache for 5 minutes
+            print(otp)
+            send_mail(
+                'OTP Verification For Delete Account',
+                f'Your OTP is: {otp}',
+                'Forgot Password OTP',
+                [email],
+                fail_silently=False,
+            )
+            return Response({'message': 'OTP sent to your email'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Email not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class VerifyOTP(APIView):
+    def post(self, request):
+        otp = request.data.get('otp')
+        cached_otp = cache.get(f'otp_{request.user.id}')
+
+        if cached_otp is None:
+            return Response({'error': 'OTP expired or not found'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if otp == cached_otp:
+            # OTP is correct, delete the user account
+            request.user.delete()
+            return Response({'message': 'Account deleted successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class Helpview(APIView):
     def get(self, request):
         help=Help.objects.all()
         help_serializer= HelpSerializer(help, many=True)
         return Response(help_serializer.data, status=status.HTTP_200_OK)
 
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 class Privacypolicy(APIView):
     def get(self, request):
         privacy_policies = PrivacyPolicy.objects.all()
         privacy_serializer= PrivacyPolicySerializer(privacy_policies, many=True)
         return Response(privacy_serializer.data, status=status.HTTP_200_OK)
-    
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])   
 class Faqview(APIView):
     def get(self, request):
         faq = Faq.objects.all()
         faq_serializer = FaqSerializer(faq, many=True)
         return Response(faq_serializer.data, status=status.HTTP_200_OK)
     
+
 @api_view(['POST'])
 def forgotpassword(request):
-    email = request.data.get('email')  # Accessing JSON data
+    email = request.data.get('email')  
     if email:
         if User.objects.filter(email=email).exists():
             otp = ''.join(random.choices(string.digits, k=6))
@@ -351,4 +413,17 @@ def forgotpassword(request):
             return Response({'error': 'Email not found in the database'}, status=status.HTTP_404_NOT_FOUND)
     else:
         return Response({'error': 'Email not provided'}, status=status.HTTP_400_BAD_REQUEST)
-
+    
+@api_view(['POST'])
+def forgotpasswordotpvalidate(request):
+    if request.method == 'POST':
+        otp_entered = request.data.get('otp_entered')
+        otp_generated = request.data.get('otp_generated')  
+        
+        if otp_entered == otp_generated:
+            return Response({'message': 'OTP validated successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'message': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    

@@ -10,7 +10,7 @@ urlpatterns = [
     path('editprofile/', views.editprofile, name='editprofile'),
     path('dashboardanalysis/', views.dashboardanalysis, name='dashboardanalysis'),
     path('categories/', views.categories, name='categories'),
-    path('addcategories/', views.Addcategory.as_view()),
+    path('addsubcategories/', views.Addsubcategory.as_view()),
     path('subcategories/<int:pk>/', views.subcategories, name='subcategories'),
     path('expenses/', views.Expenses.as_view()),
     path('expenses/<int:pk>/', views.Expenses.as_view()),
@@ -21,5 +21,8 @@ urlpatterns = [
     path('help/', views.Helpview.as_view()),
     path('privacypolicy/',views.Privacypolicy.as_view()),
     path('faq/',views.Faqview.as_view()),
-    path('forgotpassword/', views.forgotpassword, name='forgotpassword')
+    path('forgotpassword/', views.forgotpassword, name='forgotpassword'),
+    path('forgotpasswordotpvalidate/', views.validate_otp, name='validate_otp'),
+    path('verify-email/', views.VerifyEmail.as_view()),
+    path('VerifyOTP/', views.VerifyOTP.as_view()),
 ]
