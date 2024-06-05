@@ -23,6 +23,6 @@ urlpatterns = [
     path('faq/',views.Faqview.as_view()),
     path('forgotpassword/', views.forgotpassword, name='forgotpassword'),
     path('forgotpasswordotpvalidate/', views.validate_otp, name='validate_otp'),
-    path('verify-email/', views.VerifyEmail.as_view()),
+    path('verify-email/', views.forgotpasswordotpvalidate.as_view()),
     path('VerifyOTP/', views.VerifyOTP.as_view()),
 ]
