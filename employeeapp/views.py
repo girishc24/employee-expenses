@@ -12,10 +12,11 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response  import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.views import APIView
-from . serializers import UserCreateSerializer, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer, ExpenseSerializer, SubscriptionSerialixer, HelpSerializer, PrivacyPolicySerializer, FaqSerializer, UsersubscriptionSerializer, ExpenseSerializerNew, ExpenseSerializerEdit, ExpenseSerializerview, AddsubcategorySerializer
+from . serializers import UserCreateSerializer, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer, ExpenseSerializer, SubscriptionSerialixer, HelpSerializer, PrivacyPolicySerializer, FaqSerializer, UsersubscriptionSerializer, ExpenseSerializerNew, ExpenseSerializerEdit, ExpenseSerializerview, AddsubcategorySerializer, UserEditSerializersnew,EmployeeEditSerializers
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.cache import cache
+from django.contrib.auth.hashers import make_password
 from .models import Employee,Category, Subcategory,  Expense, Subscriptions, Usersubscription, Help, PrivacyPolicy,Faq
 
 
@@ -173,28 +174,28 @@ def viewprofile(request):
 def editprofile(request):
     if request.method == 'PUT':
         user_instance = request.user
-        user_data = request.data.get('user', {})
-        user_data['username'] = user_data.get('email')  # Set email as the username
-        user_serializer = UserAddSerializersnew(instance=user_instance, data=user_data)
-        employee_instance = user_instance.employee
-        employee_serializer = EmployeeSerializers(instance=employee_instance, data=request.data.get('employee', {}))
+        user_data = request.data
+        user_serializer = UserEditSerializersnew(instance=user_instance, data=user_data)
+        employee_data = request.data
+        employee_instance = user_instance.employee  
+        employee_serializer = EmployeeEditSerializers(instance=employee_instance, data=employee_data)
 
-        user_valid = user_serializer.is_valid()
-        employee_valid = employee_serializer.is_valid()
-
-        if user_valid and employee_valid:
+        if user_serializer.is_valid(raise_exception=True) and employee_serializer.is_valid(raise_exception=True):
             user_serializer.save()
             employee_serializer.save()
-            return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
-        else:
-            errors = {
-                'user_errors': user_serializer.errors if not user_valid else None,
-                'employee_errors': employee_serializer.errors if not employee_valid else None
+
+            response_data = {
+                'user': user_serializer.data,
+                'employee': employee_serializer.data
             }
-            return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        return Response({'error': user_serializer.errors, 'employee_error': employee_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     else:
-        return Response({'message': 'Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response({'error': 'GET Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+        
 
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
@@ -408,7 +409,7 @@ def forgotpassword(request):
                 [email],
                 fail_silently=False,
             )
-            return Response({'message': 'OTP sent to your email', 'OTP': otp}, status=status.HTTP_200_OK)
+            return Response({'message': 'OTP sent to your email', 'OTP': otp, 'email': email}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Email not found in the database'}, status=status.HTTP_404_NOT_FOUND)
     else:
@@ -418,10 +419,14 @@ def forgotpassword(request):
 def forgotpasswordotpvalidate(request):
     if request.method == 'POST':
         otp_entered = request.data.get('otp_entered')
-        otp_generated = request.data.get('otp_generated')  
-        
+        otp_generated = request.data.get('otp_generated')
+        password = request.data.get('password')
+        email = request.data.get('email')  
+        user = User.objects.get(email=email)
         if otp_entered == otp_generated:
-            return Response({'message': 'OTP validated successfully'}, status=status.HTTP_200_OK)
+            user.password = make_password(password)
+            user.save()
+            return Response({'message': 'OTP Validated Successfully & Password Updated Successfully'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
     else:
