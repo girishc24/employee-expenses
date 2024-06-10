@@ -3,6 +3,7 @@ from . models import Employee, Category, Subcategory, Expense, Subscriptions, He
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from djoser.serializers  import UserSerializer, UserCreateSerializer
+from django.conf import settings
 
 class UserCreateSerializer(serializers.ModelSerializer):
     class  Meta:
@@ -103,16 +104,20 @@ class ExpenseSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Expense
-        fields = ['id', 'document', 'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof','user','document']
+        fields = ['id', 'document',  'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof','user','document']
+
+    
 
 class ExpenseSerializerview(serializers.ModelSerializer):
     category = CategorySerializer()
     subcategory = SubcategorySerializer()
+    
     class Meta:
         model = Expense
-        fields = ['id', 'document', 'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof','user','document']
+        fields = ['id', 'document', 'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof', 'user']
 
-
+    
+    
 class ExpenseSerializerNew(serializers.ModelSerializer):
     category = CategorySerializer()
     subcategory = SubcategorySerializer()
@@ -124,9 +129,24 @@ class ExpenseSerializerEdit(serializers.ModelSerializer):
     
     class Meta:
         model = Expense
-        fields = ['id', 'document', 'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof','document']
+        fields = ['id',  'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof','document']
 
+    extra_kwargs = {
+            'document': {'required': False},
+            'expense_date': {'required': False},
+            'amount': {'required': False},
+            'category': {'required': False},
+            'subcategory': {'required': False},
+            'payment': {'required': False},
+            'note': {'required': False},
+            'proof': {'required': False},
+        }
     
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 class SubscriptionSerialixer(serializers.ModelSerializer):
     class Meta:

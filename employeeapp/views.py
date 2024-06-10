@@ -225,7 +225,7 @@ class Expenses(APIView):
         user = request.user  
         #print(user)
         request.data['user'] = user.id  
-        serializer = ExpenseSerializer(data=request.data)
+        serializer = ExpenseSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response (serializer.data, status=status.HTTP_201_CREATED)
@@ -236,7 +236,7 @@ class Expenses(APIView):
         if pk is not None:  
             expense = Expense.objects.filter(id=pk).first()
             if expense:
-                expense_serializer = ExpenseSerializerview(expense)
+                expense_serializer = ExpenseSerializerview(expense, context={'request': request})
                 return Response(expense_serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response({'message': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -251,10 +251,10 @@ class Expenses(APIView):
         if not expense:
             return Response({'message': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = ExpenseSerializerEdit(instance=expense, data=request.data)
+        serializer = ExpenseSerializerEdit(instance=expense, data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data,  status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
