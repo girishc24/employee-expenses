@@ -130,17 +130,16 @@ class ExpenseSerializerEdit(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ['id',  'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof','document']
-
-    extra_kwargs = {
-            'document': {'required': False},
-            'expense_date': {'required': False},
-            'amount': {'required': False},
-            'category': {'required': False},
-            'subcategory': {'required': False},
-            'payment': {'required': False},
-            'note': {'required': False},
-            'proof': {'required': False},
-        }
+        extra_kwargs = {
+                'document': {'required': False},
+                'expense_date': {'required': False},
+                'amount': {'required': False},
+                'category': {'required': False},
+                'subcategory': {'required': False},
+                'payment': {'required': False},
+                'note': {'required': False},
+                'proof': {'required': False},
+            }
     
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():

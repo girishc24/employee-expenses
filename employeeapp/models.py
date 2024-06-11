@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from .validators import validate_file_size
-
+from django.conf import settings
+from urllib.parse import urljoin
 
 class Employee(models.Model):
     user = models.OneToOneField(User,  on_delete=models.CASCADE)
@@ -34,7 +35,7 @@ class Expense(models.Model):
     STATUS_CHOICES = [
         ('UPI', 'UPI'),
         ('Cash', 'Cash'),
-        ('Credit/Dedit', 'Credit/Dedit'),
+        ('Credit/Debit', 'Credit/Debit'),
         ('Net Banking', 'Net Banking'),
     ]
     STATUS_PROOF = [
@@ -59,6 +60,10 @@ class Expense(models.Model):
     def __str__(self) -> str:
         return self.category.name
     
+    def get_document_url(self):
+        if self.document:
+            return urljoin(settings.MEDIA_URL, self.document.url)
+        return None
 
 class Subscriptions(models.Model):
     created_date = models.DateField(auto_now_add=True)
