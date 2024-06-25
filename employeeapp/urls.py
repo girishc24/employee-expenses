@@ -22,7 +22,10 @@ urlpatterns = [
     path('privacypolicy/',views.Privacypolicy.as_view()),
     path('faq/',views.Faqview.as_view()),
     path('forgotpassword/', views.forgotpassword, name='forgotpassword'),
-    path('forgotpasswordotpvalidate/', views.validate_otp, name='validate_otp'),
-    path('verify-email/', views.forgotpasswordotpvalidate.as_view()),
+    path('forgotpasswordotpvalidate/', views.forgotpasswordotpvalidate, name='forgotpasswordotpvalidate'),
+    path('verify-email/', views.VerifyEmail.as_view()),
     path('VerifyOTP/', views.VerifyOTP.as_view()),
+    path('Razorpaykey/', views.Razorpaykeyview.as_view()),
+    path('viewreport/', views.Viewreport.as_view()),
+    
 ]

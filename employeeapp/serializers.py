@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from . models import Employee, Category, Subcategory, Expense, Subscriptions, Help, PrivacyPolicy,Faq, Usersubscription
+from . models import Employee, Category, Subcategory, Expense, Subscriptions, Help, PrivacyPolicy,Faq, Usersubscription, Razorpaykey
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from djoser.serializers  import UserSerializer, UserCreateSerializer
@@ -17,7 +17,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         password = self.validated_data.get('password')
-        if password:  # Check if password is provided
+        if password:  
             self.validated_data['password'] = make_password(password)  # Hash the password using make_password
         return super().save(**kwargs)
 
@@ -49,7 +49,7 @@ class UserEditSerializersnew(serializers.ModelSerializer):
     
     def save(self, **kwargs):
         password = self.validated_data.get('password')
-        if password:  # Check if password is provided
+        if password:  
             self.validated_data['password'] = make_password(password)  # Hash the password using make_password
         return super().save(**kwargs) 
 
@@ -105,8 +105,19 @@ class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ['id', 'document',  'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof','user','document']
-
     
+    def get_document_url(self, obj):
+        request = self.context.get('request')
+        if obj.document:
+            return request.build_absolute_uri(obj.get_document_url())
+        return None
+    
+
+    def get_document_url(self, obj):
+        request = self.context.get('request')
+        if obj.document:
+            return request.build_absolute_uri(obj.get_document_url())
+        return None
 
 class ExpenseSerializerview(serializers.ModelSerializer):
     category = CategorySerializer()
@@ -114,9 +125,21 @@ class ExpenseSerializerview(serializers.ModelSerializer):
     
     class Meta:
         model = Expense
+
         fields = ['id', 'document', 'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof', 'user']
 
-    
+    def get_document_url(self, obj):
+        request = self.context.get('request')
+        if request and obj.document:
+            return request.build_absolute_uri(settings.MEDIA_URL + obj.document)
+        return None
+
+
+    def get_document_url(self, obj):
+        request = self.context.get('request')
+        if obj.document:
+            return request.build_absolute_uri(obj.get_document_url())
+        return None
     
 class ExpenseSerializerNew(serializers.ModelSerializer):
     category = CategorySerializer()
@@ -124,6 +147,8 @@ class ExpenseSerializerNew(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = [ 'id','expense_date', 'amount', 'category', 'subcategory', 'payment']
+
+    
 
 class ExpenseSerializerEdit(serializers.ModelSerializer):
     
@@ -147,13 +172,24 @@ class ExpenseSerializerEdit(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    def get_document_url(self, obj):
+        request = self.context.get('request')
+        if obj.document:
+            return request.build_absolute_uri(obj.get_document_url())
+        return None
+
 class SubscriptionSerialixer(serializers.ModelSerializer):
     class Meta:
         model = Subscriptions
         fields = '__all__'
 
+class SubscriptionSerialixerNew(serializers.ModelSerializer):
+    class Meta:
+        model = Subscriptions
+        fields = [ 'id','name', 'description']
+
 class UsersubscriptionSerializer(serializers.ModelSerializer):
-    #user = UserSerializer()
+    sub_plan = SubscriptionSerialixerNew()
     class Meta:
         model = Usersubscription
         fields ='__all__'
@@ -171,4 +207,10 @@ class PrivacyPolicySerializer(serializers.ModelSerializer):
 class FaqSerializer(serializers.ModelSerializer):
     class Meta:
         model = Faq
+        fields = '__all__'
+
+
+class RazorpaykeySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Razorpaykey
         fields = '__all__'

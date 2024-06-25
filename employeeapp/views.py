@@ -12,14 +12,15 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response  import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.views import APIView
-from . serializers import UserCreateSerializer, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer, ExpenseSerializer, SubscriptionSerialixer, HelpSerializer, PrivacyPolicySerializer, FaqSerializer, UsersubscriptionSerializer, ExpenseSerializerNew, ExpenseSerializerEdit, ExpenseSerializerview, AddsubcategorySerializer, UserEditSerializersnew,EmployeeEditSerializers
+from . serializers import UserCreateSerializer, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer, ExpenseSerializer, SubscriptionSerialixer, HelpSerializer, PrivacyPolicySerializer, FaqSerializer, UsersubscriptionSerializer, ExpenseSerializerNew, ExpenseSerializerEdit, ExpenseSerializerview, AddsubcategorySerializer, UserEditSerializersnew,EmployeeEditSerializers,RazorpaykeySerializer
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.cache import cache
 from django.contrib.auth.hashers import make_password
-from .models import Employee,Category, Subcategory,  Expense, Subscriptions, Usersubscription, Help, PrivacyPolicy,Faq
-
-
+from .models import Employee,Category, Subcategory,  Expense, Subscriptions, Usersubscription, Help, PrivacyPolicy,Faq, Razorpaykey
+from django.utils.dateparse import parse_date
+import pandas as pd
+import io
 
 def welcome(request):
     return  HttpResponse("Welcome")
@@ -60,8 +61,17 @@ def create_default_categories(sender, instance, created, **kwargs):
             return date(new_year, new_month, new_day)
         today = date.today()
         three_months_later = add_months(today, 3)
-        Usersubscription.objects.create(user=instance, start_date=today,  end_date=three_months_later, description='First 3 Months Free')
-        
+        plan = Subscriptions.objects.get(id=1)
+        print(f"Plan ID {plan}")
+        subscription = Usersubscription.objects.create(
+            user=instance,
+            sub_plan=plan,  
+            start_date=today,
+            end_date=three_months_later,
+            amt=plan.price,
+            status='Completed'
+        )
+        print(f"Created subscription: {subscription}")
         # Create default categories
         travel_category = Category.objects.create(name='Travel', user=instance)
         accomodation_category = Category.objects.create(name='Accommodation', user=instance)
@@ -265,7 +275,7 @@ class Archive(APIView):
         if pk is not None:  
             expense = Expense.objects.filter(id=pk).first()
             if expense:
-                expense_serializer = ExpenseSerializerview(expense)
+                expense_serializer = ExpenseSerializerview(expense, context={'request': request})
                 return Response(expense_serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response({'message': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -274,8 +284,43 @@ class Archive(APIView):
             expenses = Expense.objects.filter(user=user, archived=True)
             expenses_serializer = ExpenseSerializerNew(expenses, many=True)
             return Response(expenses_serializer.data, status=status.HTTP_200_OK)
+
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class Viewreport(APIView):
+    def get(self, request):
+        user = request.user
+        expenses = Expense.objects.filter(user=user, archived=False)
+        
+        # Get query parameters
+        start_date = request.query_params.get('startdate')
+        end_date = request.query_params.get('enddate')
+        categories = request.query_params.getlist('categories')
+
+        # Filter by start date
+        if start_date:
+            start_date = parse_date(start_date)
+            if start_date:
+                expenses = expenses.filter(expense_date__gte=start_date)
+        
+        # Filter by end date
+        if end_date:
+            end_date = parse_date(end_date)
+            if end_date:
+                expenses = expenses.filter(expense_date__lte=end_date)
+        
+        # Filter by categories
+        if categories:
+            expenses = expenses.filter(category__name__in=categories)
+        
+        # Serialize the filtered data
+        expenses_serializer = ExpenseSerializerNew(expenses, many=True)
+        return Response(expenses_serializer.data, status=status.HTTP_200_OK)
+
+
     
-    
+
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 class Addsubcategory(APIView):
@@ -297,7 +342,7 @@ class Addsubcategory(APIView):
 @permission_classes([IsAuthenticated])
 class Subscriptiondetails(APIView):
     def get(self, request):
-        sub = Subscriptions.objects.all()
+        sub = Subscriptions.objects.exclude(id=1)
         subscriptions_serializer = SubscriptionSerialixer(sub, many=True)
         return Response(subscriptions_serializer.data, status=status.HTTP_200_OK)
     
@@ -394,6 +439,14 @@ class Faqview(APIView):
         faq = Faq.objects.all()
         faq_serializer = FaqSerializer(faq, many=True)
         return Response(faq_serializer.data, status=status.HTTP_200_OK)
+    
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])   
+class Razorpaykeyview(APIView):
+    def get(self, request):
+        razorpay = Razorpaykey.objects.all()
+        razorpay_serializer = RazorpaykeySerializer(razorpay, many=True)
+        return Response(razorpay_serializer.data, status=status.HTTP_200_OK)
     
 
 @api_view(['POST'])
