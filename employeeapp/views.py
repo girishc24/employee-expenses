@@ -20,7 +20,12 @@ from django.contrib.auth.hashers import make_password
 from .models import Employee,Category, Subcategory,  Expense, Subscriptions, Usersubscription, Help, PrivacyPolicy,Faq, Razorpaykey
 from django.utils.dateparse import parse_date
 import pandas as pd
-import io
+from openpyxl import Workbook
+from io import BytesIO
+from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
+from datetime import timedelta
 
 def welcome(request):
     return  HttpResponse("Welcome")
@@ -297,6 +302,7 @@ class Viewreport(APIView):
         start_date = request.query_params.get('startdate')
         end_date = request.query_params.get('enddate')
         categories = request.query_params.getlist('categories')
+        export_format = request.query_params.get('export', 'json')
 
         # Filter by start date
         if start_date:
@@ -314,12 +320,132 @@ class Viewreport(APIView):
         if categories:
             expenses = expenses.filter(category__name__in=categories)
         
-        # Serialize the filtered data
-        expenses_serializer = ExpenseSerializerNew(expenses, many=True)
-        return Response(expenses_serializer.data, status=status.HTTP_200_OK)
+        if export_format == 'excel':
+            domain = request.build_absolute_uri('/').rstrip('/')
+            return self.export_to_excel(expenses, domain)
+        else:
+            # Serialize the filtered data
+            expenses_serializer = ExpenseSerializerNew(expenses, many=True)
+            return Response(expenses_serializer.data, status=status.HTTP_200_OK)
 
+    def export_to_excel(self, expenses, domain):
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Expense Report"
 
-    
+        # Write headers
+        headers = ['Created Date', 'Expense Date', 'Category', 'Subcategory', 'Amount', 'Payment', 'Note', 'Proof', 'Document']
+        for col, header in enumerate(headers, start=1):
+            ws.cell(row=1, column=col, value=header)
+
+        # Write data
+        for row, expense in enumerate(expenses, start=2):
+            ws.cell(row=row, column=1, value=expense.created_date)
+            ws.cell(row=row, column=2, value=expense.expense_date)
+            ws.cell(row=row, column=3, value=expense.category.name)
+            ws.cell(row=row, column=4, value=expense.subcategory.name if expense.subcategory else '')
+            ws.cell(row=row, column=5, value=expense.amount)
+            ws.cell(row=row, column=6, value=expense.payment)
+            ws.cell(row=row, column=7, value=expense.note)
+            ws.cell(row=row, column=8, value=expense.proof)
+            ws.cell(row=row, column=9, value=self.get_file_url(expense.document, domain))
+
+        # Create a BytesIO buffer to save the workbook to
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        # Create the HttpResponse with Excel content type
+        response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=expense_report.xlsx'
+
+        return response
+
+    def get_file_url(self, file, domain):
+        if file and hasattr(file, 'name'):
+            return f"{domain}{settings.MEDIA_URL}{file.name}"
+        return ''
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class Archivereport(APIView):
+    def get(self, request):
+        user = request.user
+        expenses = Expense.objects.filter(user=user)
+        
+        # Get query parameters
+        start_date = request.query_params.get('startdate')
+        end_date = request.query_params.get('enddate')
+        categories = request.query_params.getlist('categories')
+        export_format = request.query_params.get('export', 'json')
+
+        # Filter by start date
+        if start_date:
+            start_date = parse_date(start_date)
+            if start_date:
+                expenses = expenses.filter(expense_date__gte=start_date)
+        
+        # Filter by end date
+        if end_date:
+            end_date = parse_date(end_date)
+            if end_date:
+                expenses = expenses.filter(expense_date__lte=end_date)
+        
+        # Filter by categories
+        if categories:
+            expenses = expenses.filter(category__name__in=categories)
+        
+        # Update filtered expenses to archived=True
+        with transaction.atomic():
+            updated_count = expenses.update(archived=True)
+        
+        if export_format == 'excel':
+            return self.export_to_excel(expenses, request)
+        else:
+            # Serialize the filtered and updated data
+            expenses_serializer = ExpenseSerializerNew(expenses, many=True)
+            return Response({
+                'message': f'{updated_count} expenses have been archived.',
+                'archived_expenses': expenses_serializer.data
+            }, status=status.HTTP_200_OK)
+
+    def export_to_excel(self, expenses, request):
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Archived Expense Report"
+
+        # Write headers
+        headers = ['Created Date', 'Expense Date', 'Category', 'Subcategory', 'Amount', 'Payment', 'Note', 'Proof', 'Document']
+        for col, header in enumerate(headers, start=1):
+            ws.cell(row=1, column=col, value=header)
+
+        # Write data
+        for row, expense in enumerate(expenses, start=2):
+            ws.cell(row=row, column=1, value=expense.created_date)
+            ws.cell(row=row, column=2, value=expense.expense_date)
+            ws.cell(row=row, column=3, value=expense.category.name)
+            ws.cell(row=row, column=4, value=expense.subcategory.name if expense.subcategory else '')
+            ws.cell(row=row, column=5, value=expense.amount)
+            ws.cell(row=row, column=6, value=expense.payment)
+            ws.cell(row=row, column=7, value=expense.note)
+            ws.cell(row=row, column=8, value=str(expense.proof) if expense.proof else '')
+            ws.cell(row=row, column=9, value=self.get_file_url(expense.document, request))
+
+        # Create a BytesIO buffer to save the workbook to
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        # Create the HttpResponse with Excel content type
+        response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=archived_expense_report.xlsx'
+
+        return response
+
+    def get_file_url(self, file, request):
+        if file and hasattr(file, 'name'):
+            return request.build_absolute_uri(f"{settings.MEDIA_URL}{file.name}")
+        return ''
 
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -354,6 +480,53 @@ class UserSubscriptionView(APIView):
         users=Usersubscription.objects.filter(user=user)
         subscriptio_serializer=UsersubscriptionSerializer(users, many=True)
         return Response(subscriptio_serializer.data, status=status.HTTP_200_OK)
+
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+class Subscriptionrenewal(APIView):
+    def post(self, request):
+        user = request.user
+        sub_plan_id = request.data.get('sub_plan_id')
+
+        # Fetch the subscription plan
+        try:
+            sub_plan = Subscriptions.objects.get(id=sub_plan_id)
+        except Subscriptions.DoesNotExist:
+            return Response({"error": "Subscription plan not found"}, status=404)
+
+        # Check if the user has any active subscription
+        active_subscription = Usersubscription.objects.filter(
+            user=user,
+            end_date__gte=timezone.now().date()
+        ).first()
+
+        if active_subscription:
+            return Response({"error": "An active subscription already exists"}, status=400)
+
+        # Calculate the new end date for a new subscription
+        current_date = timezone.now().date()
+        duration_days = sub_plan.duration_months * 30  # 1 month = 30 days
+        new_end_date = current_date + timedelta(days=duration_days)
+
+        razorpay_order_id = request.data.get('razorpay_order_id')
+        razorpay_payment_id = request.data.get('razorpay_payment_id')
+        amt = sub_plan.price
+        status = request.data.get('status')
+
+        # Create a new subscription record
+        Usersubscription.objects.create(
+            user=user,
+            sub_plan=sub_plan,
+            start_date=current_date,
+            end_date=new_end_date,
+            razorpay_order_id=razorpay_order_id,
+            razorpay_payment_id=razorpay_payment_id,
+            amt=amt,
+            status=status,
+        )
+
+        return Response({"message": "Subscription renewed successfully", "new_end_date": new_end_date})
 
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])

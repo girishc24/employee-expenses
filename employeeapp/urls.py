@@ -27,5 +27,6 @@ urlpatterns = [
     path('VerifyOTP/', views.VerifyOTP.as_view()),
     path('Razorpaykey/', views.Razorpaykeyview.as_view()),
     path('viewreport/', views.Viewreport.as_view()),
-    
+    path('archivereport/', views.Archivereport.as_view()),
+    path('subscriptionrenewal/', views.Subscriptionrenewal.as_view()),
 ]
