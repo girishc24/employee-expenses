@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+     path('auth/jwt/create/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('', views.welcome, name='welcome'),
     path('adduser/', views.adduser, name='adduser'),
     path('check_email_phone/', views.check_email_phone, name='check_email_phone'),
