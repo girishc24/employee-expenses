@@ -99,6 +99,12 @@ class PrivacyPolicy(models.Model):
     def __str__(self)-> str:
         return "Privacy Policy"
 
+class Termscondition(models.Model):
+    description=models.TextField()
+
+    def __str__(self)-> str:
+        return "Terms & Condition"
+    
 class Faq(models.Model):
     date=models.DateField(auto_now_add=True)
     question=models.CharField(max_length=200, null=False, blank=False)

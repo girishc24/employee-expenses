@@ -21,6 +21,7 @@ urlpatterns = [
     path('usersubscription/',views.UserSubscriptionView.as_view()),
     path('help/', views.Helpview.as_view()),
     path('privacypolicy/',views.Privacypolicy.as_view()),
+    path('termsandcondition/',views.Termsandcondition.as_view()),
     path('faq/',views.Faqview.as_view()),
     path('forgotpassword/', views.forgotpassword, name='forgotpassword'),
     path('forgotpasswordotpvalidate/', views.forgotpasswordotpvalidate, name='forgotpasswordotpvalidate'),

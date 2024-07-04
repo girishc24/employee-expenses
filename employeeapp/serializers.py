@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from . models import Employee, Category, Subcategory, Expense, Subscriptions, Help, PrivacyPolicy,Faq, Usersubscription, Razorpaykey
+from . models import *
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from djoser.serializers  import UserSerializer, UserCreateSerializer
@@ -202,6 +202,11 @@ class HelpSerializer(serializers.ModelSerializer):
 class PrivacyPolicySerializer(serializers.ModelSerializer):
     class Meta:
         model = PrivacyPolicy
+        fields = '__all__'
+
+class TermsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Termscondition
         fields = '__all__'
 
 class FaqSerializer(serializers.ModelSerializer):

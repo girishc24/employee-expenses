@@ -12,12 +12,12 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response  import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.views import APIView
-from . serializers import UserCreateSerializer, EmployeeSerializers, UserSerializer, UserAddSerializersnew, CategorySerializer, SubcategorySerializer, ExpenseSerializer, SubscriptionSerialixer, HelpSerializer, PrivacyPolicySerializer, FaqSerializer, UsersubscriptionSerializer, ExpenseSerializerNew, ExpenseSerializerEdit, ExpenseSerializerview, AddsubcategorySerializer, UserEditSerializersnew,EmployeeEditSerializers,RazorpaykeySerializer
+from . serializers import *
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.cache import cache
 from django.contrib.auth.hashers import make_password
-from .models import Employee,Category, Subcategory,  Expense, Subscriptions, Usersubscription, Help, PrivacyPolicy,Faq, Razorpaykey
+from .models import *
 from django.utils.dateparse import parse_date
 import pandas as pd
 from openpyxl import Workbook
@@ -615,12 +615,17 @@ class Helpview(APIView):
         help_serializer= HelpSerializer(help, many=True)
         return Response(help_serializer.data, status=status.HTTP_200_OK)
 
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+
 class Privacypolicy(APIView):
     def get(self, request):
         privacy_policies = PrivacyPolicy.objects.all()
         privacy_serializer= PrivacyPolicySerializer(privacy_policies, many=True)
+        return Response(privacy_serializer.data, status=status.HTTP_200_OK)
+
+class Termsandcondition(APIView):
+    def get(self, request):
+        privacy_policies = Termscondition.objects.all()
+        privacy_serializer= TermsSerializer(privacy_policies, many=True)
         return Response(privacy_serializer.data, status=status.HTTP_200_OK)
 
 @authentication_classes([JWTAuthentication])
