@@ -2,7 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-     path('auth/jwt/create/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/jwt/create/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/jwt/refresh/', views.CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('', views.welcome, name='welcome'),
     path('adduser/', views.adduser, name='adduser'),
     path('check_email_phone/', views.check_email_phone, name='check_email_phone'),
@@ -31,4 +32,5 @@ urlpatterns = [
     path('viewreport/', views.Viewreport.as_view()),
     path('archivereport/', views.Archivereport.as_view()),
     path('subscriptionrenewal/', views.Subscriptionrenewal.as_view()),
+    path('resetdata/', views.Resetdata.as_view()),
 ]

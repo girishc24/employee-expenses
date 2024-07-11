@@ -1,3 +1,9 @@
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+from rest_framework_simplejwt.views import TokenRefreshView
+from .serializers import CustomTokenRefreshSerializer
+
 from datetime import date
 import random
 import string
@@ -26,8 +32,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import generics
 
 
 
@@ -44,6 +49,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    serializer_class = CustomTokenRefreshSerializer
 
 def welcome(request):
     return  HttpResponse("Welcome")
@@ -96,11 +105,16 @@ def create_default_categories(sender, instance, created, **kwargs):
         )
         print(f"Created subscription: {subscription}")
         # Create default categories
-        travel_category = Category.objects.create(name='Travel', user=instance)
-        accomodation_category = Category.objects.create(name='Accommodation', user=instance)
-        food_category = Category.objects.create(name='Food Expenses', user=instance)
-        items_category = Category.objects.create(name='Items Purchased', user=instance)
-        miscellaneous_category = Category.objects.create(name='Miscellaneous', user=instance)
+        travel_photo = 'employeeapp/images/travel.png'
+        accomodation_photo = 'employeeapp/images/Accomodations.png'
+        food_photo = 'employeeapp/images/Food.png'
+        items_photo = 'employeeapp/images/MaterialPurchase.png'
+        miscellaneous_photo = 'employeeapp/images/miscellaneous.png'
+        travel_category = Category.objects.create(name='Travel', user=instance, photo=travel_photo)
+        accomodation_category = Category.objects.create(name='Accommodation', user=instance, photo=accomodation_photo)
+        food_category = Category.objects.create(name='Food Expenses', user=instance, photo=food_photo)
+        items_category = Category.objects.create(name='Items Purchased', user=instance, photo=items_photo)
+        miscellaneous_category = Category.objects.create(name='Miscellaneous', user=instance, photo=miscellaneous_photo)
 
         # Create subcategories for 'Travel'
         Subcategory.objects.create(category=travel_category, name='Flight', user=instance)
@@ -211,7 +225,7 @@ def editprofile(request):
         user_serializer = UserEditSerializersnew(instance=user_instance, data=user_data)
         employee_data = request.data
         employee_instance = user_instance.employee  
-        employee_serializer = EmployeeEditSerializers(instance=employee_instance, data=employee_data)
+        employee_serializer = EmployeeEditSerializers(instance=employee_instance, data=employee_data, context={'request': request})
 
         if user_serializer.is_valid(raise_exception=True) and employee_serializer.is_valid(raise_exception=True):
             user_serializer.save()
@@ -237,7 +251,7 @@ def categories(request):
     if request.method == 'GET':
         user = request.user.id
         categories = Category.objects.filter(user_id=user).order_by('-id')
-        category_serializer = CategorySerializer(categories, many=True)
+        category_serializer = CategorySerializer(categories, many=True, context={'request': request})
         return Response(category_serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -256,8 +270,8 @@ def subcategories(request, pk):
 class Expenses(APIView):
     def post(self, request):
         user = request.user  
-        #print(user)
-        request.data['user'] = user.id  
+        print(user)
+        #request.data['user'] = user.id  
         serializer = ExpenseSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
@@ -290,6 +304,30 @@ class Expenses(APIView):
             return Response(serializer.data,  status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self,request, pk):
+        expense = Expense.objects.filter(id=pk).first()
+        if not expense:
+            return Response({'message': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        expense.delete()
+        return Response({'message': 'Expense deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])   
+class Resetdata(generics.GenericAPIView):
+    def get_queryset(self):
+        user = self.request.user
+        return Expense.objects.filter(user=user)
+
+    def delete(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if not queryset.exists():
+            return Response({'message': 'No data found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Delete all expenses for the user
+        deleted_count, _ = queryset.delete()
+        return Response({'message': f'{deleted_count} Expense Data Reset Successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -319,7 +357,7 @@ class Viewreport(APIView):
         # Get query parameters
         start_date = request.query_params.get('startdate')
         end_date = request.query_params.get('enddate')
-        categories = request.query_params.getlist('categories')
+        categories = request.query_params.get('categories')
         export_format = request.query_params.get('export', 'json')
 
         # Filter by start date
@@ -336,7 +374,8 @@ class Viewreport(APIView):
         
         # Filter by categories
         if categories:
-            expenses = expenses.filter(category__name__in=categories)
+            categories_list = [category.strip() for category in categories.split(',')]
+            expenses = expenses.filter(category__name__in=categories_list)
         
         if export_format == 'excel':
             domain = request.build_absolute_uri('/').rstrip('/')
@@ -394,7 +433,7 @@ class Archivereport(APIView):
         # Get query parameters
         start_date = request.query_params.get('startdate')
         end_date = request.query_params.get('enddate')
-        categories = request.query_params.getlist('categories')
+        categories = request.query_params.get('categories')
         export_format = request.query_params.get('export', 'json')
 
         # Filter by start date
@@ -411,7 +450,8 @@ class Archivereport(APIView):
         
         # Filter by categories
         if categories:
-            expenses = expenses.filter(category__name__in=categories)
+            categories_list = [category.strip() for category in categories.split(',')]
+            expenses = expenses.filter(category__name__in=categories_list)
         
         # Update filtered expenses to archived=True
         with transaction.atomic():
@@ -546,6 +586,9 @@ class Subscriptionrenewal(APIView):
 
         return Response({"message": "Subscription renewed successfully", "new_end_date": new_end_date})
 
+
+
+    
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -643,6 +686,9 @@ class Razorpaykeyview(APIView):
         razorpay = Razorpaykey.objects.all()
         razorpay_serializer = RazorpaykeySerializer(razorpay, many=True)
         return Response(razorpay_serializer.data, status=status.HTTP_200_OK)
+
+
+
     
 
 @api_view(['POST'])
@@ -680,4 +726,5 @@ def forgotpasswordotpvalidate(request):
             return Response({'message': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'message': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
     

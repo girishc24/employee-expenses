@@ -4,6 +4,15 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from djoser.serializers  import UserSerializer, UserCreateSerializer
 from django.conf import settings
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        refresh = RefreshToken(attrs['refresh'])
+        data['access_expiry'] = refresh.access_token.payload['exp']
+        return data
 
 class UserCreateSerializer(serializers.ModelSerializer):
     class  Meta:
@@ -36,6 +45,7 @@ class UserEditSerializersnew(serializers.ModelSerializer):
             'first_name': {'required': False},
             'last_name': {'required': False},
             'email': {'required': False},
+            
         }
 
     def update(self, instance, validated_data):
@@ -56,16 +66,18 @@ class UserEditSerializersnew(serializers.ModelSerializer):
 class EmployeeSerializers(serializers.ModelSerializer):
     class Meta:
         model = Employee
-        fields= ['phone','designation','company','photo']
+        fields= ['phone','designation','company','photo','department','emp_id']
 
 class EmployeeEditSerializers(serializers.ModelSerializer):
     class Meta:
         model = Employee
-        fields= ['designation','company','photo']
+        fields = ['designation', 'company', 'photo', 'department', 'emp_id']
         extra_kwargs = {
             'designation': {'required': False},
             'company': {'required': False},
             'photo': {'required': False},
+            'department': {'required': False},
+            'emp_id': {'required': False},
         }
 
     def update(self, instance, validated_data):
@@ -88,7 +100,7 @@ class UserSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id','name']
+        fields = ['id','name','photo']
 
 class SubcategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -101,23 +113,24 @@ class AddsubcategorySerializer(serializers.ModelSerializer):
         fields = ['id','category','name','user']
 
 class ExpenseSerializer(serializers.ModelSerializer):
-    
+    document_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Expense
-        fields = ['id', 'document',  'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof','user','document']
-    
-    def get_document_url(self, obj):
-        request = self.context.get('request')
-        if obj.document:
-            return request.build_absolute_uri(obj.get_document_url())
-        return None
-    
+        fields = ['id', 'document', 'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof', 'user', 'document_url']
+        read_only_fields = ['user']
 
     def get_document_url(self, obj):
         request = self.context.get('request')
         if obj.document:
-            return request.build_absolute_uri(obj.get_document_url())
+            return request.build_absolute_uri(obj.document.url)
         return None
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        validated_data['user'] = request.user
+        return super().create(validated_data)
+
 
 class ExpenseSerializerview(serializers.ModelSerializer):
     category = CategorySerializer()
@@ -193,6 +206,8 @@ class UsersubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usersubscription
         fields ='__all__'
+
+
 
 class HelpSerializer(serializers.ModelSerializer):
     class Meta:
