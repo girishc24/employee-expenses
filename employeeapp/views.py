@@ -1,6 +1,5 @@
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
 from rest_framework_simplejwt.views import TokenRefreshView
 from .serializers import CustomTokenRefreshSerializer
 
@@ -33,6 +32,7 @@ from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import generics
+from django.db.models import Sum
 
 
 
@@ -72,7 +72,7 @@ def adduser(request):
             }
             return Response(response_data, status=status.HTTP_201_CREATED)
         
-        return Response({'error': user_serializer.errors, 'employee_error': employee_serializers.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': user_serializer.errors, 'error': employee_serializers.errors}, status=status.HTTP_400_BAD_REQUEST)
     
     else:
         return Response({'error': 'GET Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -154,9 +154,9 @@ def check_email_phone(request):
         
         if email and phone:
             if User.objects.filter(email=email).exists():
-                return Response({'message': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
             elif Employee.objects.filter(phone=phone).exists():
-                return Response({'message': 'Phone number already exists'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': 'Phone Number already exists'}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 otp = ''.join(random.choices(string.digits, k=6))
                 send_mail(
@@ -168,9 +168,9 @@ def check_email_phone(request):
                 )
                 return Response({'message': 'OTP sent to your email', 'OTP': otp}, status=status.HTTP_200_OK)
         else:
-            return Response({'message': 'Both email and phone must be provided'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Both email and phone must be provided'}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({'message': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response({'error': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 @api_view(['POST'])
@@ -184,9 +184,9 @@ def validate_otp(request):
         if otp_entered == otp_generated:
             return Response({'message': 'OTP validated successfully'}, status=status.HTTP_200_OK)
         else:
-            return Response({'message': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({'message': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response({'error': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 
@@ -209,9 +209,9 @@ def viewprofile(request):
                 }
                 return Response(employeedata, status=status.HTTP_200_OK)
             except Employee.DoesNotExist:
-                return Response({"message": "Employee not found for this user."}, status=status.HTTP_404_NOT_FOUND)
+                return Response({"error": "Employee not found for this user."}, status=status.HTTP_404_NOT_FOUND)
         except User.DoesNotExist:
-            return Response({"message": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
     else:
         return Response({'error': 'Invalid Method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
@@ -237,7 +237,7 @@ def editprofile(request):
             }
             return Response(response_data, status=status.HTTP_200_OK)
 
-        return Response({'error': user_serializer.errors, 'employee_error': employee_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': user_serializer.errors, 'error': employee_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     else:
         return Response({'error': 'GET Method not allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -249,10 +249,15 @@ def editprofile(request):
 @permission_classes([IsAuthenticated])
 def categories(request):
     if request.method == 'GET':
-        user = request.user.id
-        categories = Category.objects.filter(user_id=user).order_by('-id')
+        user_id = request.user.id
+        categories = Category.objects.filter(user_id=user_id).order_by('-id')
         category_serializer = CategorySerializer(categories, many=True, context={'request': request})
-        return Response(category_serializer.data, status=status.HTTP_200_OK)
+
+        response_data = {
+            "category": category_serializer.data,
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
@@ -286,17 +291,17 @@ class Expenses(APIView):
                 expense_serializer = ExpenseSerializerview(expense, context={'request': request})
                 return Response(expense_serializer.data, status=status.HTTP_200_OK)
             else:
-                return Response({'message': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
         else:  
             user = request.user
             expenses = Expense.objects.filter(user=user)
-            expenses_serializer = ExpenseSerializerNew(expenses, many=True)
+            expenses_serializer = ExpenseSerializerNew(expenses, many=True, context={'request': request})
             return Response(expenses_serializer.data, status=status.HTTP_200_OK)
     
     def put(self, request, pk):
         expense = Expense.objects.filter(id=pk).first()
         if not expense:
-            return Response({'message': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = ExpenseSerializerEdit(instance=expense, data=request.data, context={'request': request})
         if serializer.is_valid():
@@ -308,10 +313,11 @@ class Expenses(APIView):
     def delete(self,request, pk):
         expense = Expense.objects.filter(id=pk).first()
         if not expense:
-            return Response({'message': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
         
         expense.delete()
         return Response({'message': 'Expense deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
 
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])   
@@ -323,7 +329,7 @@ class Resetdata(generics.GenericAPIView):
     def delete(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         if not queryset.exists():
-            return Response({'message': 'No data found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'No data found'}, status=status.HTTP_404_NOT_FOUND)
         
         # Delete all expenses for the user
         deleted_count, _ = queryset.delete()
@@ -343,7 +349,7 @@ class Archive(APIView):
         else:  
             user = request.user
             expenses = Expense.objects.filter(user=user, archived=True)
-            expenses_serializer = ExpenseSerializerNew(expenses, many=True)
+            expenses_serializer = ExpenseSerializerNew(expenses, many=True, context={'request': request})
             return Response(expenses_serializer.data, status=status.HTTP_200_OK)
 
 
@@ -382,7 +388,7 @@ class Viewreport(APIView):
             return self.export_to_excel(expenses, domain)
         else:
             # Serialize the filtered data
-            expenses_serializer = ExpenseSerializerNew(expenses, many=True)
+            expenses_serializer = ExpenseSerializerNew(expenses, many=True, context={'request': request})
             return Response(expenses_serializer.data, status=status.HTTP_200_OK)
 
     def export_to_excel(self, expenses, domain):
@@ -461,7 +467,7 @@ class Archivereport(APIView):
             return self.export_to_excel(expenses, request)
         else:
             # Serialize the filtered and updated data
-            expenses_serializer = ExpenseSerializerNew(expenses, many=True)
+            expenses_serializer = ExpenseSerializerNew(expenses, many=True, context={'request': request})
             return Response({
                 'message': f'{updated_count} expenses have been archived.',
                 'archived_expenses': expenses_serializer.data
@@ -594,24 +600,37 @@ class Subscriptionrenewal(APIView):
 @permission_classes([IsAuthenticated])
 def dashboardanalysis(request):
     if request.method == 'GET':
-        expenses = {
-        "amount": 1964.00
-        }
-        category = {
-        "Miscellaneous": 38.7,
-        "Items Purchased": 20.69,
-        "Food Expenses": 17.7,
-        "Accommodation": 21.8,
-        "Travel": 45
-        }
-        dashboarddtata = {
-                    'expenses': expenses,
-                    'category': category
-                }
-        return Response(dashboarddtata, status=status.HTTP_200_OK)
+        user_id = request.user.id
         
+        # Calculate total expenses
+        total_expense = Expense.objects.filter(user_id=user_id, archived=False).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        # Initialize category data with all categories set to 0
+        categories = Category.objects.all()
+        category_data = {category.name: 0 for category in categories}
+        
+        # Calculate expenses per category
+        category_expenses = Expense.objects.filter(user_id=user_id, archived=False).values('category__name').annotate(total_amount=Sum('amount'))
+        
+        # Update category data with actual expenses
+        for category in category_expenses:
+            category_name = category['category__name']
+            category_total = category['total_amount']
+            category_data[category_name] = category_total
+        
+        # Prepare response data
+        expenses = {
+            "amount": total_expense
+        }
+        dashboard_data = {
+            'expenses': expenses,
+            'category': category_data
+        }
+        
+        return Response(dashboard_data, status=status.HTTP_200_OK)
     else:
         return Response({'error': 'Invalid Method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    
 
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -723,8 +742,8 @@ def forgotpasswordotpvalidate(request):
             user.save()
             return Response({'message': 'OTP Validated Successfully & Password Updated Successfully'}, status=status.HTTP_200_OK)
         else:
-            return Response({'message': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({'message': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response({'error': 'Method Not Allowed'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
     

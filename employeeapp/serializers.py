@@ -6,6 +6,8 @@ from djoser.serializers  import UserSerializer, UserCreateSerializer
 from django.conf import settings
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.db.models import Sum
+import math
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
@@ -27,7 +29,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         password = self.validated_data.get('password')
         if password:  
-            self.validated_data['password'] = make_password(password)  # Hash the password using make_password
+            self.validated_data['password'] = make_password(password)  
         return super().save(**kwargs)
 
 
@@ -98,9 +100,25 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id','username',  'email', 'first_name', 'last_name']
 
 class CategorySerializer(serializers.ModelSerializer):
+    percentage = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = ['id','name','photo']
+        fields = ['id', 'name', 'photo', 'percentage']
+
+    def get_percentage(self, obj):
+        user_id = self.context['request'].user.id
+        total_expense = Expense.objects.filter(user_id=user_id, archived=False).aggregate(Sum('amount'))['amount__sum'] or 0
+        
+        if obj:
+            category_expense = Expense.objects.filter(user_id=user_id, archived=False, category=obj).aggregate(Sum('amount'))['amount__sum'] or 0
+            percentage = (category_expense / total_expense) if total_expense else 0
+            return round(percentage, 2)  # Ensure the percentage is represented as a float to two decimal places
+        
+        return 0.0
+
+class CategoriesWithTotalExpenseSerializer(serializers.Serializer):
+    category = CategorySerializer(many=True)
 
 class SubcategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -113,18 +131,10 @@ class AddsubcategorySerializer(serializers.ModelSerializer):
         fields = ['id','category','name','user']
 
 class ExpenseSerializer(serializers.ModelSerializer):
-    document_url = serializers.SerializerMethodField()
-
     class Meta:
         model = Expense
-        fields = ['id', 'document', 'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof', 'user', 'document_url']
+        fields = ['id', 'document', 'created_date', 'updated_date', 'expense_date', 'amount', 'category', 'subcategory', 'payment', 'note', 'proof', 'user']
         read_only_fields = ['user']
-
-    def get_document_url(self, obj):
-        request = self.context.get('request')
-        if obj.document:
-            return request.build_absolute_uri(obj.document.url)
-        return None
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -190,6 +200,7 @@ class ExpenseSerializerEdit(serializers.ModelSerializer):
         if obj.document:
             return request.build_absolute_uri(obj.get_document_url())
         return None
+
 
 class SubscriptionSerialixer(serializers.ModelSerializer):
     class Meta:
