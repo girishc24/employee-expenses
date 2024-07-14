@@ -12,7 +12,7 @@ urlpatterns = [
     path('editprofile/', views.editprofile, name='editprofile'),
     path('dashboardanalysis/', views.dashboardanalysis, name='dashboardanalysis'),
     path('categories/', views.categories, name='categories'),
-    path('addsubcategories/', views.Addsubcategory.as_view()),
+    path('addsubcategories/<int:pk>/', views.Addsubcategory.as_view()),
     path('subcategories/<int:pk>/', views.subcategories, name='subcategories'),
     path('expenses/', views.Expenses.as_view()),
     path('expenses/<int:pk>/', views.Expenses.as_view()),

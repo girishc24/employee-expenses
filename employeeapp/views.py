@@ -202,7 +202,7 @@ def viewprofile(request):
 
             try:
                 employee = Employee.objects.get(user=user)
-                emp_serializer = EmployeeSerializers(employee)
+                emp_serializer = EmployeeSerializers(employee, context={'request': request})
                 employeedata = {
                     'user': user_serializer.data,
                     'employee': emp_serializer.data
@@ -277,6 +277,17 @@ class Expenses(APIView):
         user = request.user  
         print(user)
         #request.data['user'] = user.id  
+        subscription = Usersubscription.objects.filter(user_id=user.id).order_by('-end_date').first()
+        print(subscription)
+
+        if subscription is None:
+            return Response({'error': 'No active subscription found.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        current_date = timezone.now().date()
+        if subscription.end_date < current_date:
+            return Response({'error': f'Your subscription has expired on {subscription.end_date}'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
         serializer = ExpenseSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
@@ -294,7 +305,7 @@ class Expenses(APIView):
                 return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
         else:  
             user = request.user
-            expenses = Expense.objects.filter(user=user)
+            expenses = Expense.objects.filter(user=user, archived=False)
             expenses_serializer = ExpenseSerializerNew(expenses, many=True, context={'request': request})
             return Response(expenses_serializer.data, status=status.HTTP_200_OK)
     
@@ -514,16 +525,22 @@ class Archivereport(APIView):
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 class Addsubcategory(APIView):
-    def post(self, request):
-        user = request.user.id 
-        category = Category.objects.get(user=user, name='Miscellaneous')
-        category_id = category.id
-        request.data['category'] = category_id 
-        request.data['user'] = user  
-        serializer = AddsubcategorySerializer(data=request.data)
+    def post(self, request, pk):
+        user = request.user.id
+        try:
+            category = Category.objects.get(id=pk)
+        except Category.DoesNotExist:
+            return Response({"error": "Category not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Make a mutable copy of request.data
+        data = request.data.copy()
+        data['category'] = category.id
+        data['user'] = user
+        
+        serializer = AddsubcategorySerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response (serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                 
