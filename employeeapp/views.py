@@ -33,7 +33,7 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework import generics
 from django.db.models import Sum
-
+import logging
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -269,7 +269,7 @@ def subcategories(request, pk):
         return Response(subcategory_serializer.data, status=status.HTTP_200_OK)
 
 
-
+logger = logging.getLogger(__name__)
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 class Expenses(APIView):
@@ -321,13 +321,17 @@ class Expenses(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    def delete(self,request, pk):
-        expense = Expense.objects.filter(id=pk).first()
-        if not expense:
-            return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        expense.delete()
-        return Response({'message': 'Expense deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    
+    def delete(self, request, pk):
+        try:
+            logger.debug(f"Delete request received for expense ID: {pk}")
+            expense = get_object_or_404(Expense, id=pk)
+            expense.delete()
+            logger.info(f"Expense ID {pk} deleted successfully.")
+            return Response({'message': 'Expense deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            logger.error(f"Error occurred while deleting expense ID {pk}: {str(e)}")
+            return Response({'error': 'An error occurred while deleting the expense'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @authentication_classes([JWTAuthentication])
@@ -576,6 +580,9 @@ class Subscriptionrenewal(APIView):
         except Subscriptions.DoesNotExist:
             return Response({"error": "Subscription plan not found"}, status=404)
 
+        # Calculate the duration in days
+        duration_days = sub_plan.duration 
+
         # Check if the user has any active subscription
         active_subscription = Usersubscription.objects.filter(
             user=user,
@@ -583,12 +590,14 @@ class Subscriptionrenewal(APIView):
         ).first()
 
         if active_subscription:
-            return Response({"error": "An active subscription already exists"}, status=400)
+            # If there's an active subscription, start the new one after it expires
+            start_date = active_subscription.end_date + timedelta(days=1)
+        else:
+            # If there's no active subscription, start the new one today
+            start_date = timezone.now().date()
 
-        # Calculate the new end date for a new subscription
-        current_date = timezone.now().date()
-        duration_days = sub_plan.duration_months * 30  # 1 month = 30 days
-        new_end_date = current_date + timedelta(days=duration_days)
+        # Calculate the new end date for the new subscription
+        new_end_date = start_date + timedelta(days=duration_days)
 
         razorpay_order_id = request.data.get('razorpay_order_id')
         razorpay_payment_id = request.data.get('razorpay_payment_id')
@@ -599,7 +608,7 @@ class Subscriptionrenewal(APIView):
         Usersubscription.objects.create(
             user=user,
             sub_plan=sub_plan,
-            start_date=current_date,
+            start_date=start_date,
             end_date=new_end_date,
             razorpay_order_id=razorpay_order_id,
             razorpay_payment_id=razorpay_payment_id,
@@ -608,7 +617,6 @@ class Subscriptionrenewal(APIView):
         )
 
         return Response({"message": "Subscription renewed successfully", "new_end_date": new_end_date})
-
 
 
     

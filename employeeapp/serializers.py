@@ -101,10 +101,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     percentage = serializers.SerializerMethodField()
+    total_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'photo', 'percentage']
+        fields = ['id', 'name', 'photo', 'percentage', 'total_amount']
 
     def get_percentage(self, obj):
         user_id = self.context['request'].user.id
@@ -113,7 +114,16 @@ class CategorySerializer(serializers.ModelSerializer):
         if obj:
             category_expense = Expense.objects.filter(user_id=user_id, archived=False, category=obj).aggregate(Sum('amount'))['amount__sum'] or 0
             percentage = (category_expense / total_expense) if total_expense else 0
-            return round(percentage, 2)  # Ensure the percentage is represented as a float to two decimal places
+            return round(percentage, 2)  
+        
+        return 0.0
+
+    def get_total_amount(self, obj):  # Rename the method to match the field name
+        user_id = self.context['request'].user.id
+        
+        if obj:
+            category_expense = Expense.objects.filter(user_id=user_id, archived=False, category=obj).aggregate(Sum('amount'))['amount__sum'] or 0
+            return round(category_expense)
         
         return 0.0
 
