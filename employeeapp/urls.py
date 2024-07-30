@@ -4,7 +4,10 @@ from . import views
 urlpatterns = [
     path('auth/jwt/create/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/jwt/refresh/', views.CustomTokenRefreshView.as_view(), name='token_refresh'),
-    path('', views.welcome, name='welcome'),
+    path('', views.home, name='home'),
+    path('privacy/', views.privacy, name='privacypolicy'),
+    path('termsandcondition/', views.termsandcondition, name='termsandcondition'),
+    path('refundpolicy/', views.refundpolicy, name='refundpolicy'),
     path('adduser/', views.adduser, name='adduser'),
     path('check_email_phone/', views.check_email_phone, name='check_email_phone'),
     path('validate_otp/', views.validate_otp, name='validate_otp'),

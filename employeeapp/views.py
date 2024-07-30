@@ -54,8 +54,17 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
 
-def welcome(request):
-    return  HttpResponse("Welcome")
+def home(request):
+    return render(request, "index.html")
+
+def privacy(request):
+    return render(request, "privacy-policy.html")
+
+def termsandcondition(request):
+    return render(request, "terms-conditions.html")
+
+def refundpolicy(request):
+    return render(request, "refundpolicy.html")
 
 @api_view(['POST'])
 def adduser(request):
@@ -92,7 +101,7 @@ def create_default_categories(sender, instance, created, **kwargs):
                                 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][new_month - 1])
             return date(new_year, new_month, new_day)
         today = date.today()
-        three_months_later = add_months(today, 3)
+        three_months_later = add_months(today, 1)
         plan = Subscriptions.objects.get(id=1)
         print(f"Plan ID {plan}")
         subscription = Usersubscription.objects.create(
@@ -113,7 +122,7 @@ def create_default_categories(sender, instance, created, **kwargs):
         travel_category = Category.objects.create(name='Travel', user=instance, photo=travel_photo)
         accomodation_category = Category.objects.create(name='Accommodation', user=instance, photo=accomodation_photo)
         food_category = Category.objects.create(name='Food Expenses', user=instance, photo=food_photo)
-        items_category = Category.objects.create(name='Items Purchased', user=instance, photo=items_photo)
+        items_category = Category.objects.create(name='Material Purchased', user=instance, photo=items_photo)
         miscellaneous_category = Category.objects.create(name='Miscellaneous', user=instance, photo=miscellaneous_photo)
 
         # Create subcategories for 'Travel'
@@ -131,7 +140,7 @@ def create_default_categories(sender, instance, created, **kwargs):
         Subcategory.objects.create(category=accomodation_category, name='Accommodation', user=instance)
 
         # Create subcategories for 'Items Purchased'
-        Subcategory.objects.create(category=items_category, name='Items Purchased', user=instance)
+        Subcategory.objects.create(category=items_category, name='Material Purchased', user=instance)
 
         # Create subcategories for 'Food Expenses'
         Subcategory.objects.create(category=food_category, name='Breakfast', user=instance)
@@ -144,7 +153,8 @@ def create_default_categories(sender, instance, created, **kwargs):
         Subcategory.objects.create(category=miscellaneous_category, name='Cell phone', user=instance)
         Subcategory.objects.create(category=miscellaneous_category, name='Health & Wellness', user=instance)
         Subcategory.objects.create(category=miscellaneous_category, name='Learning & Development', user=instance)
-        Subcategory.objects.create(category=miscellaneous_category, name='Entertainment / Refreshment', user=instance)
+        Subcategory.objects.create(category=miscellaneous_category, name='Entertainment', user=instance)
+        Subcategory.objects.create(category=miscellaneous_category, name='Refreshment', user=instance)
 
 @api_view(['POST'])
 def check_email_phone(request):
