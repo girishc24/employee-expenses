@@ -84,7 +84,8 @@ class Subscriptions(models.Model):
     name = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     duration_months = models.IntegerField(choices=DURATION_CHOICES)
-    duration = models.IntegerField(null=False, blank=False)    
+    duration = models.IntegerField(null=False, blank=False)  
+    available= models.IntegerField(null=False, blank=False)  
     description = models.TextField(blank=True, null=True)
 
     def __str__(self) -> str:
@@ -100,6 +101,7 @@ class Usersubscription(models.Model):
     razorpay_payment_id = models.CharField(max_length=255, unique=True, null=True)
     amt = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=100)
+    available = models.IntegerField( null=False, blank=False)
     
     
     def __str__(self)-> str:

@@ -3,7 +3,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenRefreshView
 from .serializers import CustomTokenRefreshSerializer
 
-
 from datetime import date
 import random
 import string
@@ -111,7 +110,8 @@ def create_default_categories(sender, instance, created, **kwargs):
             start_date=today,
             end_date=three_months_later,
             amt=plan.price,
-            status='Completed'
+            status='Completed',
+            available=180
         )
         print(f"Created subscription: {subscription}")
         # Create default categories
@@ -286,10 +286,10 @@ logger = logging.getLogger(__name__)
 class Expenses(APIView):
     def post(self, request):
         user = request.user  
-        print(user)
+        #print(user)
         #request.data['user'] = user.id  
         subscription = Usersubscription.objects.filter(user_id=user.id).order_by('-end_date').first()
-        print(subscription)
+        print(subscription.available)
 
         if subscription is None:
             return Response({'error': 'No active subscription found.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -298,10 +298,15 @@ class Expenses(APIView):
         if subscription.end_date < current_date:
             return Response({'error': f'Your subscription has expired on {subscription.end_date}'}, status=status.HTTP_400_BAD_REQUEST)
         
+        if subscription.available <= 0:
+            return Response({'error': 'Your usage limit has been reached. To add more expenses, please upgrade to a new plan.'}, status=status.HTTP_400_BAD_REQUEST)
+        
 
         serializer = ExpenseSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
+            subscription.available = subscription.available - 1
+            subscription.save()
             return Response (serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -625,6 +630,7 @@ class Subscriptionrenewal(APIView):
             razorpay_payment_id=razorpay_payment_id,
             amt=amt,
             status=status,
+            available=sub_plan.available,
         )
 
         return Response({"message": "Subscription renewed successfully", "new_end_date": new_end_date})
@@ -675,7 +681,7 @@ class VerifyEmail(APIView):
         email = request.user.email
         if email:
             otp = ''.join(random.choices(string.digits, k=6))
-            cache.set(f'otp_{request.user.id}', otp, timeout=300)  # store OTP in cache for 5 minutes
+            #cache.set(f'otp_{request.user.id}', otp, timeout=300)  # store OTP in cache for 5 minutes
             print(otp)
             send_mail(
                 'OTP Verification For Delete Account',
@@ -684,7 +690,7 @@ class VerifyEmail(APIView):
                 [email],
                 fail_silently=False,
             )
-            return Response({'message': 'OTP sent to your email'}, status=status.HTTP_200_OK)
+            return Response({'otp': otp, 'message': 'OTP sent to your email'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Email not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -692,14 +698,13 @@ class VerifyEmail(APIView):
 @permission_classes([IsAuthenticated])
 class VerifyOTP(APIView):
     def post(self, request):
-        otp = request.data.get('otp')
-        cached_otp = cache.get(f'otp_{request.user.id}')
+        otp_entered = request.data.get('otp_entered')
+        otp_generated = request.data.get('otp_generated')
 
-        if cached_otp is None:
-            return Response({'error': 'OTP expired or not found'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if otp == cached_otp:
-            # OTP is correct, delete the user account
+        print(f'otp_entered: {otp_entered}, otp_generated: {otp_generated}')
+
+        if otp_entered and otp_generated and otp_entered == otp_generated:
+            
             request.user.delete()
             return Response({'message': 'Account deleted successfully'}, status=status.HTTP_200_OK)
         else:
