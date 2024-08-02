@@ -170,10 +170,24 @@ def check_email_phone(request):
                 return Response({'error': 'Phone Number already exists'}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 otp = ''.join(random.choices(string.digits, k=6))
+                subject = 'Welcome to BizmITT! Verify Your Email'
+                message = f'''
+                Welcome to BizmITT - your go-to app for managing expenses effortlessly!
+
+                To get started, please verify your email using the OTP below:
+
+                Your OTP: {otp}
+
+                Looking forward to helping you streamline your reimbursements!
+
+                Best regards,
+                InnoThrive Technologies
+                '''
+
                 send_mail(
-                    'OTP Verification',
-                    f'Your OTP is: {otp}',
-                    'Email Verification',
+                    subject,
+                    message,
+                    'Email Verification',  
                     [email],
                     fail_silently=False,
                 )
