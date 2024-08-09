@@ -52,6 +52,7 @@ class Expense(models.Model):
     ]
     created_date = models.DateField(auto_now_add=True)
     updated_date=models.DateField(auto_now=True)
+    archived_date=models.DateField(null=True, blank=True)
     user = models.ForeignKey(User, related_name='expenses', on_delete=models.CASCADE)
     expense_date = models.DateField(auto_now=False)
     amount = models.DecimalField( max_digits=10, decimal_places=2)
