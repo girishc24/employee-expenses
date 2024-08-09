@@ -41,7 +41,7 @@ from PIL import Image
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import sys
-
+from django.db.models import Q
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -82,6 +82,7 @@ def adduser(request):
     if request.method == 'POST':
         user_serializer = UserCreateSerializer(data=request.data)
         employee_serializers = EmployeeSerializers(data=request.data)
+        
 
         if user_serializer.is_valid(raise_exception=True) and employee_serializers.is_valid(raise_exception=True):
             user = user_serializer.save()
@@ -116,17 +117,27 @@ def create_default_categories(sender, instance, created, **kwargs):
         today = date.today()
         three_months_later = add_days(today, 15)
         plan = Subscriptions.objects.get(id=1)
-        print(f"Plan ID {plan}")
-        subscription = Usersubscription.objects.create(
-            user=instance,
-            sub_plan=plan,  
-            start_date=today,
-            end_date=three_months_later,
-            amt=plan.price,
-            status='Current Plan',
-            available=55
-        )
-        print(f"Created subscription: {subscription}")
+        #print(f"Plan ID {plan}")
+        deleted_user = DeletedAccount.objects.filter(
+            emailid=instance.username
+        ).exists()
+
+        if not deleted_user:
+            # Create a subscription only if the user data is not in DeletedAccount
+            subscription = Usersubscription.objects.create(
+                user=instance,
+                sub_plan=plan,
+                start_date=today,
+                end_date=three_months_later,
+                amt=plan.price,
+                status='Current Plan',
+                available=55
+            )
+            print(f"Created subscription: {subscription}")
+        else:
+            print(f"User {instance.username} is in DeletedAccount; no subscription created.")
+
+        
         # Create default categories
         travel_photo = 'employeeapp/images/travel.png'
         accomodation_photo = 'employeeapp/images/Accomodations.png'
@@ -400,7 +411,7 @@ class Expenses(APIView):
                 return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
         else:  
             user = request.user
-            expenses = Expense.objects.filter(user=user, archived=False)
+            expenses = Expense.objects.filter(user=user, archived=False).order_by('-id')
             # Get query parameters
             start_date = request.query_params.get('startdate')
             end_date = request.query_params.get('enddate')
@@ -430,17 +441,17 @@ class Expenses(APIView):
 
          
     
-    def put(self, request, pk):
-        expense = Expense.objects.filter(id=pk).first()
-        if not expense:
-            return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
+    # def put(self, request, pk):
+    #     expense = Expense.objects.filter(id=pk).first()
+    #     if not expense:
+    #         return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = ExpenseSerializerEdit(instance=expense, data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data,  status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     serializer = ExpenseSerializerEdit(instance=expense, data=request.data, context={'request': request})
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data,  status=status.HTTP_200_OK)
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     
     def put(self, request, pk):
@@ -575,6 +586,14 @@ class Archive(APIView):
             }
 
             return Response(dashboard_data, status=status.HTTP_200_OK)
+    
+    def delete(self, request, pk):
+        try:
+            expense = get_object_or_404(Expense, id=pk)
+            expense.delete()
+            return Response({'message': 'Expense deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'error': 'An error occurred while deleting the expense'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @authentication_classes([JWTAuthentication])
@@ -723,7 +742,8 @@ class Archivereport(APIView):
         
         # Update filtered expenses to archived=True
         with transaction.atomic():
-            updated_count = expenses.update(archived=True)
+            updated_count = expenses.update(archived=True, archived_date=timezone.now())
+            
         
         if export_format == 'excel':
             return self.export_to_excel(expenses, request)
@@ -950,12 +970,36 @@ class VerifyEmail(APIView):
             #cache.set(f'otp_{request.user.id}', otp, timeout=300)  # store OTP in cache for 5 minutes
             print(otp)
             send_mail(
-                'OTP Verification For Delete Account',
-                f'Your OTP is: {otp}',
-                'Forgot Password OTP',
+                'BizmITT Account Deletion Request - OTP Verification',
+                f'''
+                Hi {request.user.first_name},
+
+                We have received a request to delete your
+                BizmITT account. To proceed with the 
+                deletion, please verify your request
+                by entering the OTP below:
+
+                Your OTP: {otp}
+
+                This OTP is valid for the next 10 minutes. If
+                you did not request to delete your account, 
+                please ignore this email and your account
+                will remain active.
+
+                Please note that once your account is 
+                deleted, all your data will be permanently
+                removed and cannot be recovered.
+
+                Thank you for using BizmITT.
+
+                Best regards,
+                InnoThrive Technologies
+                ''',
+                'no-reply@innothrive.com',
                 [email],
                 fail_silently=False,
             )
+
             return Response({'otp': otp, 'message': 'OTP sent to your email'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Email not provided'}, status=status.HTTP_400_BAD_REQUEST)
