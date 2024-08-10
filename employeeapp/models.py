@@ -104,7 +104,9 @@ class Usersubscription(models.Model):
     amt = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=100)
     available = models.IntegerField(null=False, blank=False)
-    
+    is_expired = models.BooleanField(default=False)
+    credits_used = models.IntegerField(default=0)
+    is_purchased = models.BooleanField(default=False)
     
     def __str__(self)-> str:
         return f"{self.user.username} - {self.sub_plan.name}"
