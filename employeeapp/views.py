@@ -65,8 +65,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
 
+# def home(request):
+#     return render(request, "index.html")
+
 def home(request):
-    return render(request, "index.html")
+    return HttpResponse("Welcome to BizmiTT")
 
 def privacy(request):
     return render(request, "privacy-policy.html")
