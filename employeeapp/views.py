@@ -17,6 +17,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response  import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.views import APIView
+from rest_framework.exceptions import AuthenticationFailed
 from . serializers import *
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -26,6 +27,7 @@ from .models import *
 from django.utils.dateparse import parse_date
 import pandas as pd
 from openpyxl import Workbook
+from openpyxl.styles import Alignment
 from io import BytesIO
 from django.conf import settings
 from django.db import transaction
@@ -34,17 +36,26 @@ from datetime import timedelta
 from rest_framework import generics
 from django.db.models import Sum
 import logging
-
+import json
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
+from django.db.models import Q
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        data = super().validate(attrs)
-        refresh = self.get_token(self.user)
+        try:
+            data = super().validate(attrs)
+            refresh = self.get_token(self.user)
 
-        data['refresh'] = str(refresh)
-        data['access'] = str(refresh.access_token)
-        data['access_expiry'] = refresh.access_token.payload['exp']
-        return data
+            data['refresh'] = str(refresh)
+            data['access'] = str(refresh.access_token)
+            data['access_expiry'] = refresh.access_token.payload['exp']
+            return data
+        except AuthenticationFailed:
+            raise AuthenticationFailed({'error': 'Invalid credentials. Please try again.'})
+
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -54,8 +65,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class CustomTokenRefreshView(TokenRefreshView):
     serializer_class = CustomTokenRefreshSerializer
 
+# def home(request):
+#     return render(request, "index.html")
+
 def home(request):
-    return render(request, "index.html")
+    return HttpResponse("Welcome to BizmiTT")
 
 def privacy(request):
     return render(request, "privacy-policy.html")
@@ -71,6 +85,7 @@ def adduser(request):
     if request.method == 'POST':
         user_serializer = UserCreateSerializer(data=request.data)
         employee_serializers = EmployeeSerializers(data=request.data)
+        
 
         if user_serializer.is_valid(raise_exception=True) and employee_serializers.is_valid(raise_exception=True):
             user = user_serializer.save()
@@ -91,35 +106,48 @@ def adduser(request):
 @receiver(post_save, sender=User)
 def create_default_categories(sender, instance, created, **kwargs):
     if created:
-        def add_months(d, months):
-            new_month = d.month + months
-            year_offset = (new_month - 1) // 12
-            new_month = (new_month - 1) % 12 + 1
-            new_year = d.year + year_offset
-            new_day = min(d.day, [31,
-                                29 if new_year % 4 == 0 and (new_year % 100 != 0 or new_year % 400 == 0) else 28,
-                                31, 30, 31, 30, 31, 31, 30, 31, 30, 31][new_month - 1])
-            return date(new_year, new_month, new_day)
+        # def add_months(d, months):
+        #     new_month = d.month + months
+        #     year_offset = (new_month - 1) // 12
+        #     new_month = (new_month - 1) % 12 + 1
+        #     new_year = d.year + year_offset
+        #     new_day = min(d.day, [31,
+        #                         29 if new_year % 4 == 0 and (new_year % 100 != 0 or new_year % 400 == 0) else 28,
+        #                         31, 30, 31, 30, 31, 31, 30, 31, 30, 31][new_month - 1])
+        #     return date(new_year, new_month, new_day)
+        def add_days(d, days):
+            return d + timedelta(days=days)
         today = date.today()
-        three_months_later = add_months(today, 1)
+        three_months_later = add_days(today, 15)
         plan = Subscriptions.objects.get(id=1)
-        print(f"Plan ID {plan}")
-        subscription = Usersubscription.objects.create(
-            user=instance,
-            sub_plan=plan,  
-            start_date=today,
-            end_date=three_months_later,
-            amt=plan.price,
-            status='Completed',
-            available=180
-        )
-        print(f"Created subscription: {subscription}")
+        #print(f"Plan ID {plan}")
+        deleted_user = DeletedAccount.objects.filter(
+            emailid=instance.username
+        ).exists()
+
+        if not deleted_user:
+            # Create a subscription only if the user data is not in DeletedAccount
+            subscription = Usersubscription.objects.create(
+                user=instance,
+                sub_plan=plan,
+                start_date=today,
+                end_date=three_months_later,
+                amt=plan.price,
+                status='Current Plan',
+                available=55
+            )
+            print(f"Created subscription: {subscription}")
+        else:
+            print(f"User {instance.username} is in DeletedAccount; no subscription created.")
+
+        
         # Create default categories
         travel_photo = 'employeeapp/images/travel.png'
         accomodation_photo = 'employeeapp/images/Accomodations.png'
         food_photo = 'employeeapp/images/Food.png'
         items_photo = 'employeeapp/images/MaterialPurchase.png'
         miscellaneous_photo = 'employeeapp/images/miscellaneous.png'
+
         travel_category = Category.objects.create(name='Travel', user=instance, photo=travel_photo)
         accomodation_category = Category.objects.create(name='Accommodation', user=instance, photo=accomodation_photo)
         food_category = Category.objects.create(name='Food Expenses', user=instance, photo=food_photo)
@@ -135,6 +163,7 @@ def create_default_categories(sender, instance, created, **kwargs):
         Subcategory.objects.create(category=travel_category, name='Ola', user=instance)
         Subcategory.objects.create(category=travel_category, name='Uber', user=instance)
         Subcategory.objects.create(category=travel_category, name='Namma Yatri', user=instance)
+        Subcategory.objects.create(category=travel_category, name='Bike', user=instance)
         Subcategory.objects.create(category=travel_category, name='Others', user=instance)
 
         # Create subcategories for 'Travel'
@@ -170,10 +199,20 @@ def check_email_phone(request):
                 return Response({'error': 'Phone Number already exists'}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 otp = ''.join(random.choices(string.digits, k=6))
+                subject = 'Welcome to BizmITT! Verify Your Email'
+                message = f'''
+                Welcome to BizmITT - your go-to app for managing expenses effortlessly!
+                To get started, please verify your email using the OTP below:
+                Your OTP: {otp}
+                Looking forward to helping you streamline your reimbursements!
+                Best regards,
+                InnoThrive Technologies
+                '''
+
                 send_mail(
-                    'OTP Verification',
-                    f'Your OTP is: {otp}',
-                    'Email Verification',
+                    subject,
+                    message,
+                    'Email Verification',  
                     [email],
                     fail_silently=False,
                 )
@@ -280,6 +319,44 @@ def subcategories(request, pk):
         return Response(subcategory_serializer.data, status=status.HTTP_200_OK)
 
 
+def compress_image(image):
+    im = Image.open(image)
+    output = BytesIO()
+    
+    # Determine the file format
+    file_format = im.format.lower()
+    
+    # Resize the image if it's too large
+    max_size = (1024, 1024)  # You can adjust this
+    im.thumbnail(max_size, Image.LANCZOS)
+    
+    # Convert to RGB if the image has an alpha channel (except for PNG)
+    if im.mode in ('RGBA', 'LA') and file_format != 'png':
+        im = im.convert('RGB')
+    
+    # Compress the image
+    if file_format in ['jpeg', 'jpg']:
+        im.save(output, format='JPEG', quality=20, optimize=True)
+    elif file_format == 'png':
+        im = im.quantize(colors=256, method=2)  # Reduce to 256 colors
+        im.save(output, format='PNG', optimize=True)
+    elif file_format == 'gif':
+        im = im.quantize(colors=64, method=2)  # Reduce to 64 colors
+        im.save(output, format='GIF', optimize=True)
+    elif file_format in ['webp', 'tiff']:
+        im.save(output, format=file_format.upper(), quality=20)
+    else:
+        # For unsupported formats, save as JPEG
+        im = im.convert('RGB')
+        im.save(output, format='JPEG', quality=20, optimize=True)
+        file_format = 'jpeg'
+    
+    output.seek(0)
+    
+    return InMemoryUploadedFile(output, 'ImageField', f"{image.name.split('.')[0]}.{file_format}", 
+                                f'image/{file_format}', sys.getsizeof(output), None)
+
+
 logger = logging.getLogger(__name__)
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -301,13 +378,29 @@ class Expenses(APIView):
         if subscription.available <= 0:
             return Response({'error': 'Your usage limit has been reached. To add more expenses, please upgrade to a new plan.'}, status=status.HTTP_400_BAD_REQUEST)
         
+        files = request.FILES.getlist('document')
 
         serializer = ExpenseSerializer(data=request.data, context={'request': request})
+
+
         if serializer.is_valid():
-            serializer.save()
-            subscription.available = subscription.available - 1
-            subscription.save()
-            return Response (serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                expense = serializer.save()
+                for file in files:
+                    # Check if the file is an image
+                    if file.content_type.startswith('image'):
+                        compressed_file = compress_image(file)
+                        ExpenseDocument.objects.create(expense=expense, document=compressed_file)
+                    else:
+                        # If it's not an image, save it as is
+                        ExpenseDocument.objects.create(expense=expense, document=file)
+                    
+
+                subscription.available -= 1
+                subscription.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -321,21 +414,84 @@ class Expenses(APIView):
                 return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
         else:  
             user = request.user
-            expenses = Expense.objects.filter(user=user, archived=False)
+            expenses = Expense.objects.filter(user=user, archived=False).order_by('-id')
+            # Get query parameters
+            start_date = request.query_params.get('startdate')
+            end_date = request.query_params.get('enddate')
+            categories = request.query_params.get('categories')
+
+            # Filter by start date
+            if start_date:
+                start_date = parse_date(start_date)
+                if start_date:
+                    expenses = expenses.filter(expense_date__gte=start_date)
+
+            # Filter by end date
+            if end_date:
+                end_date = parse_date(end_date)
+                if end_date:
+                    expenses = expenses.filter(expense_date__lte=end_date)
+
+            # Filter by categories
+            if categories:
+                categories_list = [category.strip() for category in categories.split(',')]
+                expenses = expenses.filter(category__name__in=categories_list)
+            
+            # Serialize the filtered data
             expenses_serializer = ExpenseSerializerNew(expenses, many=True, context={'request': request})
             return Response(expenses_serializer.data, status=status.HTTP_200_OK)
+            
+
+         
+    
+    # def put(self, request, pk):
+    #     expense = Expense.objects.filter(id=pk).first()
+    #     if not expense:
+    #         return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+    #     serializer = ExpenseSerializerEdit(instance=expense, data=request.data, context={'request': request})
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data,  status=status.HTTP_200_OK)
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     
     def put(self, request, pk):
-        expense = Expense.objects.filter(id=pk).first()
-        if not expense:
-            return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
-        
-        serializer = ExpenseSerializerEdit(instance=expense, data=request.data, context={'request': request})
+        try:
+            expense = Expense.objects.get(id=pk, user=request.user)
+        except Expense.DoesNotExist:
+            return Response({"error": "Expense not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Update expense fields
+        serializer = ExpenseSerializerEdit(expense, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data,  status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Handle document updates
+        document_actions = json.loads(request.data.get('document_actions', '[]'))
+        
+        for action in document_actions:
+            if action['action'] == 'delete':
+                ExpenseDocument.objects.filter(id=action['id'], expense=expense).delete()
+            elif action['action'] == 'keep':
+                pass  # Do nothing, keep the existing document
+
+        # Handle new document uploads
+        new_files = request.FILES.getlist('document')
+        for file in new_files:
+            ExpenseDocument.objects.create(expense=expense, document=file)
+
+        # Fetch updated expense and documents
+        updated_expense = ExpenseSerializer(expense).data
+        updated_documents = ExpenseDocumentSerializer(expense.documents.all(), many=True).data
+
+        return Response({
+            "expense": updated_expense,
+            "documents": updated_documents
+        }, status=status.HTTP_200_OK)
     
     
     def delete(self, request, pk):
@@ -362,8 +518,27 @@ class Resetdata(generics.GenericAPIView):
         if not queryset.exists():
             return Response({'error': 'No data found'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Delete all expenses for the user
+        
         deleted_count, _ = queryset.delete()
+        existing_category = [
+        'Refreshment', 'Entertainment', 'Learning & Development', 'Health & Wellness', 
+        'Cell phone', 'Medical Expenses', 'Dinner', 'Snacks', 'Lunch', 'Breakfast', 
+        'Material Purchased', 'Accommodation', 'Others', 'Namma Yatri', 'Uber', 'Ola', 
+        'Rapido', 'Bike', 'Train', 'Bus', 'Taxi', 'Flight'
+        ]
+        
+        new_category = []
+        user = request.user  # Get the user from the request
+        sub_category = Subcategory.objects.filter(user=user)  # Use the user instance
+
+        for sub in sub_category:
+            if sub.name not in existing_category:  
+                new_category.append(sub)
+
+        
+        for new in new_category:
+            new.delete()
+
         return Response({'message': f'{deleted_count} Expense Data Reset Successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 @authentication_classes([JWTAuthentication])
@@ -379,9 +554,49 @@ class Archive(APIView):
                 return Response({'message': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
         else:  
             user = request.user
+            # Initial queryset
             expenses = Expense.objects.filter(user=user, archived=True)
             expenses_serializer = ExpenseSerializerNew(expenses, many=True, context={'request': request})
-            return Response(expenses_serializer.data, status=status.HTTP_200_OK)
+
+            # Get query parameters
+            start_date = request.query_params.get('startdate')
+            end_date = request.query_params.get('enddate')
+            categories = request.query_params.get('categories')
+
+            # Filter by start date
+            if start_date:
+                start_date = parse_date(start_date)
+                if start_date:
+                    expenses = expenses.filter(expense_date__gte=start_date)
+
+            # Filter by end date
+            if end_date:
+                end_date = parse_date(end_date)
+                if end_date:
+                    expenses = expenses.filter(expense_date__lte=end_date)
+
+            # Filter by categories
+            if categories:
+                categories_list = [category.strip() for category in categories.split(',')]
+                expenses = expenses.filter(category__name__in=categories_list)
+
+            # Recalculate total expense based on filters
+            total_expense = expenses.aggregate(total=Sum('amount'))['total'] or 0
+
+            dashboard_data = {
+                'archived_total': total_expense,
+                'expense': ExpenseSerializerNew(expenses, many=True, context={'request': request}).data
+            }
+
+            return Response(dashboard_data, status=status.HTTP_200_OK)
+    
+    def delete(self, request, pk):
+        try:
+            expense = get_object_or_404(Expense, id=pk)
+            expense.delete()
+            return Response({'message': 'Expense deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'error': 'An error occurred while deleting the expense'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @authentication_classes([JWTAuthentication])
@@ -389,8 +604,12 @@ class Archive(APIView):
 class Viewreport(APIView):
     def get(self, request):
         user = request.user
+        employee = Employee.objects.get(user=user)  # Retrieve the employee associated with the user
         expenses = Expense.objects.filter(user=user, archived=False)
-        
+        documents = ExpenseDocument.objects.filter(expense__in=expenses)
+        for document in documents:
+            print(document)
+
         # Get query parameters
         start_date = request.query_params.get('startdate')
         end_date = request.query_params.get('enddate')
@@ -416,33 +635,65 @@ class Viewreport(APIView):
         
         if export_format == 'excel':
             domain = request.build_absolute_uri('/').rstrip('/')
-            return self.export_to_excel(expenses, domain)
+            return self.export_to_excel(expenses, domain, employee)  # Pass the employee object
         else:
             # Serialize the filtered data
             expenses_serializer = ExpenseSerializerNew(expenses, many=True, context={'request': request})
             return Response(expenses_serializer.data, status=status.HTTP_200_OK)
 
-    def export_to_excel(self, expenses, domain):
+    def export_to_excel(self, expenses, domain, employee):  # Add 'employee' parameter
         wb = Workbook()
         ws = wb.active
         ws.title = "Expense Report"
+        
+        # Set alignment for the top section
+        alignment = Alignment(horizontal="left", vertical="top")
 
-        # Write headers
-        headers = ['Created Date', 'Expense Date', 'Category', 'Subcategory', 'Amount', 'Payment', 'Note', 'Proof', 'Document']
+        # Add custom headings at the top of the sheet with employee details
+        ws['A1'] = f'Employee Name : {employee.user.get_full_name()}'
+        ws['A2'] = f'Employee ID: {employee.emp_id}'
+        ws['A3'] = f'Designation: {employee.designation}'
+        ws['A4'] = f'Department: {employee.department}'
+        ws['E1'] = 'Expense From Date :'
+        ws['E2'] = 'Expense End Date :'
+        ws['E3'] = 'Expenses Submit Date:'
+        ws['E4'] = 'Expenses Total Amount:'
+
+        # Merge cells if necessary and apply alignment
+        ws.merge_cells('A1:B1')
+        ws.merge_cells('A2:B2')
+        ws.merge_cells('A3:B3')
+        ws.merge_cells('A4:B4')
+        ws.merge_cells('E1:F1')
+        ws.merge_cells('E2:F2')
+        ws.merge_cells('E3:F3')
+        ws.merge_cells('E4:F4')
+
+        for row in range(1, 5):
+            for col in ['A', 'E']:
+                ws[f'{col}{row}'].alignment = alignment
+
+        # Write table headers
+        headers = ['SL.no', 'Created Date', 'Expense Date', 'Main Category', 'Sub Category', 
+                   'Payment Mode', 'Proof Type', 'Remarks', 'Amount', 'Proof Image']
         for col, header in enumerate(headers, start=1):
-            ws.cell(row=1, column=col, value=header)
+            ws.cell(row=6, column=col, value=header)
 
         # Write data
-        for row, expense in enumerate(expenses, start=2):
-            ws.cell(row=row, column=1, value=expense.created_date)
-            ws.cell(row=row, column=2, value=expense.expense_date)
-            ws.cell(row=row, column=3, value=expense.category.name)
-            ws.cell(row=row, column=4, value=expense.subcategory.name if expense.subcategory else '')
-            ws.cell(row=row, column=5, value=expense.amount)
+        for row, expense in enumerate(expenses, start=7):
+            ws.cell(row=row, column=1, value=row - 6)  # Serial number
+            ws.cell(row=row, column=2, value=expense.created_date)
+            ws.cell(row=row, column=3, value=expense.expense_date)
+            ws.cell(row=row, column=4, value=expense.category.name)
+            ws.cell(row=row, column=5, value=expense.subcategory.name if expense.subcategory else '')
             ws.cell(row=row, column=6, value=expense.payment)
-            ws.cell(row=row, column=7, value=expense.note)
-            ws.cell(row=row, column=8, value=expense.proof)
-            ws.cell(row=row, column=9, value=self.get_file_url(expense.document, domain))
+            ws.cell(row=row, column=7, value=expense.proof)
+            ws.cell(row=row, column=8, value=expense.note)
+            ws.cell(row=row, column=9, value=expense.amount)
+            #ws.cell(row=row, column=10, value=self.get_file_url(expense.document, domain))
+            # Fetch and concatenate document URLs
+            document_urls = [self.get_file_url(doc.document, domain) for doc in expense.documents.all()]
+            ws.cell(row=row, column=10, value="\n".join(document_urls))
 
         # Create a BytesIO buffer to save the workbook to
         buffer = BytesIO()
@@ -460,12 +711,14 @@ class Viewreport(APIView):
             return f"{domain}{settings.MEDIA_URL}{file.name}"
         return ''
 
+
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 class Archivereport(APIView):
     def get(self, request):
         user = request.user
         expenses = Expense.objects.filter(user=user)
+        documents = ExpenseDocument.objects.filter(expense__in=expenses)
         
         # Get query parameters
         start_date = request.query_params.get('startdate')
@@ -492,7 +745,8 @@ class Archivereport(APIView):
         
         # Update filtered expenses to archived=True
         with transaction.atomic():
-            updated_count = expenses.update(archived=True)
+            updated_count = expenses.update(archived=True, archived_date=timezone.now())
+            
         
         if export_format == 'excel':
             return self.export_to_excel(expenses, request)
@@ -504,27 +758,59 @@ class Archivereport(APIView):
                 'archived_expenses': expenses_serializer.data
             }, status=status.HTTP_200_OK)
 
-    def export_to_excel(self, expenses, request):
+    def export_to_excel(self, expenses, request, domain, employee): 
         wb = Workbook()
         ws = wb.active
-        ws.title = "Archived Expense Report"
+        ws.title = "Expense Report"
+        
+        # Set alignment for the top section
+        alignment = Alignment(horizontal="left", vertical="top")
 
-        # Write headers
-        headers = ['Created Date', 'Expense Date', 'Category', 'Subcategory', 'Amount', 'Payment', 'Note', 'Proof', 'Document']
+        # Add custom headings at the top of the sheet with employee details
+        ws['A1'] = f'Employee Name : {employee.user.get_full_name()}'
+        ws['A2'] = f'Employee ID: {employee.emp_id}'
+        ws['A3'] = f'Designation: {employee.designation}'
+        ws['A4'] = f'Department: {employee.department}'
+        ws['E1'] = 'Expense From Date :'
+        ws['E2'] = 'Expense End Date :'
+        ws['E3'] = 'Expenses Submit Date:'
+        ws['E4'] = 'Expenses Total Amount:'
+
+        # Merge cells if necessary and apply alignment
+        ws.merge_cells('A1:B1')
+        ws.merge_cells('A2:B2')
+        ws.merge_cells('A3:B3')
+        ws.merge_cells('A4:B4')
+        ws.merge_cells('E1:F1')
+        ws.merge_cells('E2:F2')
+        ws.merge_cells('E3:F3')
+        ws.merge_cells('E4:F4')
+
+        for row in range(1, 5):
+            for col in ['A', 'E']:
+                ws[f'{col}{row}'].alignment = alignment
+
+        # Write table headers
+        headers = ['SL.no', 'Created Date', 'Expense Date', 'Main Category', 'Sub Category', 
+                   'Payment Mode', 'Proof Type', 'Remarks', 'Amount', 'Proof Image']
         for col, header in enumerate(headers, start=1):
-            ws.cell(row=1, column=col, value=header)
+            ws.cell(row=6, column=col, value=header)
 
         # Write data
-        for row, expense in enumerate(expenses, start=2):
-            ws.cell(row=row, column=1, value=expense.created_date)
-            ws.cell(row=row, column=2, value=expense.expense_date)
-            ws.cell(row=row, column=3, value=expense.category.name)
-            ws.cell(row=row, column=4, value=expense.subcategory.name if expense.subcategory else '')
-            ws.cell(row=row, column=5, value=expense.amount)
+        for row, expense in enumerate(expenses, start=7):
+            ws.cell(row=row, column=1, value=row - 6)  # Serial number
+            ws.cell(row=row, column=2, value=expense.created_date)
+            ws.cell(row=row, column=3, value=expense.expense_date)
+            ws.cell(row=row, column=4, value=expense.category.name)
+            ws.cell(row=row, column=5, value=expense.subcategory.name if expense.subcategory else '')
             ws.cell(row=row, column=6, value=expense.payment)
-            ws.cell(row=row, column=7, value=expense.note)
-            ws.cell(row=row, column=8, value=str(expense.proof) if expense.proof else '')
-            ws.cell(row=row, column=9, value=self.get_file_url(expense.document, request))
+            ws.cell(row=row, column=7, value=expense.proof)
+            ws.cell(row=row, column=8, value=expense.note)
+            ws.cell(row=row, column=9, value=expense.amount)
+            #ws.cell(row=row, column=10, value=self.get_file_url(expense.document, domain))
+            # Fetch and concatenate document URLs
+            document_urls = [self.get_file_url(doc.document, domain) for doc in expense.documents.all()]
+            ws.cell(row=row, column=10, value="\n".join(document_urls))
 
         # Create a BytesIO buffer to save the workbook to
         buffer = BytesIO()
@@ -533,7 +819,7 @@ class Archivereport(APIView):
 
         # Create the HttpResponse with Excel content type
         response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=archived_expense_report.xlsx'
+        response['Content-Disposition'] = 'attachment; filename=expense_report.xlsx'
 
         return response
 
@@ -541,6 +827,7 @@ class Archivereport(APIView):
         if file and hasattr(file, 'name'):
             return request.build_absolute_uri(f"{settings.MEDIA_URL}{file.name}")
         return ''
+
 
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -569,7 +856,7 @@ class Addsubcategory(APIView):
 @permission_classes([IsAuthenticated])
 class Subscriptiondetails(APIView):
     def get(self, request):
-        sub = Subscriptions.objects.exclude(id=1)
+        sub = Subscriptions.objects.exclude(id=1).order_by('id')
         subscriptions_serializer = SubscriptionSerialixer(sub, many=True)
         return Response(subscriptions_serializer.data, status=status.HTTP_200_OK)
     
@@ -674,6 +961,8 @@ def dashboardanalysis(request):
         return Response({'error': 'Invalid Method'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
     
 
+
+
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 class VerifyEmail(APIView):
@@ -684,12 +973,36 @@ class VerifyEmail(APIView):
             #cache.set(f'otp_{request.user.id}', otp, timeout=300)  # store OTP in cache for 5 minutes
             print(otp)
             send_mail(
-                'OTP Verification For Delete Account',
-                f'Your OTP is: {otp}',
-                'Forgot Password OTP',
+                'BizmITT Account Deletion Request - OTP Verification',
+                f'''
+                Hi {request.user.first_name},
+
+                We have received a request to delete your
+                BizmITT account. To proceed with the 
+                deletion, please verify your request
+                by entering the OTP below:
+
+                Your OTP: {otp}
+
+                This OTP is valid for the next 10 minutes. If
+                you did not request to delete your account, 
+                please ignore this email and your account
+                will remain active.
+
+                Please note that once your account is 
+                deleted, all your data will be permanently
+                removed and cannot be recovered.
+
+                Thank you for using BizmITT.
+
+                Best regards,
+                InnoThrive Technologies
+                ''',
+                'no-reply@innothrive.com',
                 [email],
                 fail_silently=False,
             )
+
             return Response({'otp': otp, 'message': 'OTP sent to your email'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Email not provided'}, status=status.HTTP_400_BAD_REQUEST)
@@ -702,9 +1015,11 @@ class VerifyOTP(APIView):
         otp_generated = request.data.get('otp_generated')
 
         print(f'otp_entered: {otp_entered}, otp_generated: {otp_generated}')
+        user = request.user
+        phone_number = user.employee.phone
 
         if otp_entered and otp_generated and otp_entered == otp_generated:
-            
+            DeletedAccount.objects.create(emailid=user.email, phoneno=phone_number)
             request.user.delete()
             return Response({'message': 'Account deleted successfully'}, status=status.HTTP_200_OK)
         else:
@@ -757,16 +1072,29 @@ def forgotpassword(request):
     if email:
         if User.objects.filter(email=email).exists():
             otp = ''.join(random.choices(string.digits, k=6))
+            subject = 'Reset Your BizmITT Password'
+            message = f'''
+            We received a request to reset your BizmITT password. Use the OTP below to proceed:
+
+            Your OTP: {otp}
+
+            If you didn't request a password reset, please ignore this email.
+
+            Best regards,
+            InnoThrive Technologies
+            '''
+
+            # Send the email
             send_mail(
-                'OTP Verification',
-                f'Your OTP is: {otp}',
-                'Forgot Password OTP',
+                subject,
+                message,
+                'Forgot Password OTP',  
                 [email],
                 fail_silently=False,
             )
             return Response({'message': 'OTP sent to your email', 'OTP': otp, 'email': email}, status=status.HTTP_200_OK)
         else:
-            return Response({'error': 'Email not found in the database'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'No Account Found in this Mail ID'}, status=status.HTTP_404_NOT_FOUND)
     else:
         return Response({'error': 'Email not provided'}, status=status.HTTP_400_BAD_REQUEST)
     

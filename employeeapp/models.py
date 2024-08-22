@@ -52,6 +52,7 @@ class Expense(models.Model):
     ]
     created_date = models.DateField(auto_now_add=True)
     updated_date=models.DateField(auto_now=True)
+    archived_date=models.DateField(null=True, blank=True)
     user = models.ForeignKey(User, related_name='expenses', on_delete=models.CASCADE)
     expense_date = models.DateField(auto_now=False)
     amount = models.DecimalField( max_digits=10, decimal_places=2)
@@ -60,18 +61,19 @@ class Expense(models.Model):
     payment =  models.CharField(max_length=50,  choices=STATUS_CHOICES, default='UPI')
     note = models.CharField(max_length=500, null=True, blank=True)
     proof = models.CharField( max_length=50, choices=STATUS_PROOF, default='RELATED BILL')
-    document = models.FileField(upload_to='employeeapp/images', max_length=100, validators=[validate_file_size], null=True, blank=True)
+    #document = models.FileField(upload_to='employeeapp/images', max_length=100, validators=[validate_file_size], null=True, blank=True)
     archived =models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.category.name} - {self.expense_date}"
     
-# class ExpenseDocument(models.Model):
-#     expense = models.ForeignKey(Expense, related_name='documents', on_delete=models.CASCADE)
-#     document = models.FileField(upload_to='employeeapp/images', max_length=100, validators=[validate_file_size],null=True, blank=True)
+class ExpenseDocument(models.Model):
+    expense = models.ForeignKey(Expense, related_name='documents', on_delete=models.CASCADE)
+    document = models.FileField(upload_to='employeeapp/images', max_length=1000, validators=[validate_file_size],null=True, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self) -> str:
-#         return self.document.name
+    def __str__(self) -> str:
+        return f"Document for {self.expense.category.name} - {self.id}"
 
 class Subscriptions(models.Model):
     DURATION_CHOICES = [
@@ -101,8 +103,10 @@ class Usersubscription(models.Model):
     razorpay_payment_id = models.CharField(max_length=255, unique=True, null=True)
     amt = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=100)
-    available = models.IntegerField( null=False, blank=False)
-    
+    available = models.IntegerField(null=False, blank=False)
+    is_expired = models.BooleanField(default=False)
+    credits_used = models.IntegerField(default=0)
+    is_purchased = models.BooleanField(default=False)
     
     def __str__(self)-> str:
         return f"{self.user.username} - {self.sub_plan.name}"
@@ -144,3 +148,10 @@ class Razorpaykey(models.Model):
     def __str__(self):
         return "Razorpay Key Values"
     
+class DeletedAccount(models.Model):
+    date=models.DateField(auto_now_add=True)
+    emailid=models.CharField(max_length=100, null=False, blank=False)
+    phoneno=models.CharField(max_length=200, null=False, blank=False)
+
+    def __str__(self):
+        return f"{self.date}-{self.emailid}-{self.phoneno}"
