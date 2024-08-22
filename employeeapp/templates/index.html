@@ -1,361 +1,560 @@
 <!DOCTYPE html>
 <html lang="en">
-{% load static %}
+  {% load static %}
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bizmitt | Best Platform for VTU Engineering Students</title>
-    <!-- favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/favicons/apple-touch-icon.png'%}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicons/favicon-32x32.png'%}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicons/favicon-16x16.png'%}">
-    <link rel="manifest" href="{% static 'images/favicons/site.webmanifest'%}">
-    <!-- plugin scripts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&amp;display=swap"
-        rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Prata&amp;display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="{% static 'css/animate.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/bootstrap-select.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/fontawesome-all.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
-    <link rel="stylesheet" href="{% static 'css/owl.carousel.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/owl.theme.default.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/swiper.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/piloz-icons.css' %}">
-    
-
-    <!-- theme styles -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>BizmiTT - Expense Manager App  </title>
+  <link rel="shortcut icon" href="image/favicon.png" type="image/x-icon">
+  <!-- Bootstrap , fonts & icons  -->
+  <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+  <link rel="stylesheet" href="{% static 'fonts/icon-font/css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'fonts/typography-font/typo.css' %}">
+  <link rel="stylesheet" href="{% static 'fonts/fontawesome-5/css/all.css' %}">
+  <!-- Plugin'stylesheets  -->
+  <link rel="stylesheet" href="{% static 'plugins/aos/aos.min.css' %}">
+  <link rel="stylesheet" href="{% static 'plugins/fancybox/jquery.fancybox.min.css' %}">
+  <link rel="stylesheet" href="{% static 'plugins/nice-select/nice-select.min.css' %}">
+  <link rel="stylesheet" href="{% static 'plugins/slick/slick.min.css' %}">
+  <!-- Vendor stylesheets  -->
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <!-- Custom stylesheet -->
 </head>
 
-<body>
-
-    <div class="preloader">
-        <img src="{% static 'images/loader.png'%}" height="100" class="preloader__image" alt="">
-    </div><!-- /.preloader -->
-
-    <div class="page-wrapper">
-        <header class="site-header-one stricky site-header-one__fixed-top">
-            <div class="container-fluid">
-                <div class="site-header-one__logo">
-                    <a href="index-2.html">
-                        <img src="{% static 'images/bizmitt.png'%}" width="220" alt="">
-                    </a>
-                    <span class="side-menu__toggler"><i class="fa fa-bars"></i></span><!-- /.side-menu__toggler -->
-                </div><!-- /.site-header-one__logo -->
-                <div class="main-nav__main-navigation">
-                    <ul class="main-nav__navigation-box one-page-scroll-menu">
-                        <li class="scrollToLink">
-                            <a href="#home">Home</a>
-                        </li>
-                        <li class="scrollToLink"><a href="#features">Features</a></li>
-                        
-                        <li class="scrollToLink"><a href="#screens">Screens</a></li>
-                    </ul><!-- /.main-nav__navigation-box -->
-                </div><!-- /.main-nav__main-navigation -->
-                <div class="main-nav__right">
-                    <a href="#" class="thm-btn"><span>Download App</span></a>
-                </div><!-- /.main-nav__right -->
-            </div><!-- /.container-fluid -->
-        </header><!-- /.site-header-one -->
-
-        <section class="banner-one" id="home">
-            <img src="{% static 'images/banner/banner-shape-1-1.png'%}" alt="Banner-Shape-1" class="banner-shape-1">
-            <img src="{% static 'images/banner/banner-shape-1-2.png'%}" alt="Banner-Shape-2" class="banner-shape-2">
-            <div class="banner-one__bg" style="background-image: url({% static 'images/banner/banner-bg-1.png'%});"></div>
-            <div class="container">
-                <div class="row">
-                    <div class="col-xl-6 col-lg-6">
-                        <div class="banner-one__content">
-                            <h3>We help students to <br>achieve big <br>goals</h3>
-                            <p>Best student companion for engineering students studying under VTU University.</p>
-                            <a href="#" class="thm-btn"><span>Download App</span></a>
-                        </div>
-                    </div>
-                    <div class="col-xl-6 col-lg-6">
-                        <div class="banner-img wow fadeInUp" data-wow-duration="1500ms">
-                            <img src="{% static 'images/shapes/banner-1-1.png'%}"  width="100px" class="banner-image__curvs" alt="">
-                            <div class="banner-bg"
-                                style="background-image: url({% static 'images/banner/banner-shape-1-4.png'%})"></div>
-                            <img src="{% static 'images/banner/banner-img-1.png'%}" alt="Banner-img">
-                            <div class="banner-icon-1">
-                                <i class="piloz-lamp"></i>
-                            </div>
-                            <div class="banner-icon-2">
-                                <i class="piloz-linked"></i>
-                            </div>
-                            <div class="banner-icon-3">
-                                <i class="piloz-human-resources"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-
-        <section id="features" class="service-one">
-            <div class="container">
-                <div class="block-title text-center">
-                    <p>Our App Feature Lists</p>
-                    <h3>Bizmitt Great Features</h3>
-                </div>
-                <div class="row">
-                    <div class=" col-xl-3 col-lg-3 col-md-6 wow fadeInLeft" data-wow-duration="1500ms">
-                        <div class="service-one__single">
-                            <div class="service-icon">
-                                <div class="icon-box">
-                                    <i class="piloz-writing"></i>
-                                </div>
-                            </div>
-                            <div class="text">
-                                <h3>Instant Expense Logging</h3>
-                                <p>Quickly capture all business expenses on-the-go.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" col-xl-3 col-lg-3 col-md-6 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="100ms">
-                        <div class="service-one__single">
-                            <div class="service-icon icon-bg-2">
-                                <div class="icon-box icon-box-bg-2">
-                                    <i class="piloz-shield"></i>
-                                </div>
-                            </div>
-                            <div class="text">
-                                <h3>One-Click Reports</h3>
-                                <p>Generate and export expense reports effortlessly.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" col-xl-3 col-lg-3 col-md-6 wow fadeInDown" data-wow-duration="1500ms" data-wow-delay="200ms">
-                        <div class="service-one__single">
-                            <div class="service-icon icon-bg-3">
-                                <div class="icon-box icon-box-bg-3">
-                                    <i class="piloz-user"></i>
-                                </div>
-                            </div>
-                            <div class="text">
-                                <h3>Spending Analytics</h3>
-                                <p>Gain insights into expense patterns across categories.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class=" col-xl-3 col-lg-3 col-md-6 wow fadeInRight" data-wow-duration="1500ms" data-wow-delay="300ms">
-                        <div class="service-one__single">
-                            <div class="service-icon icon-bg-4">
-                                <div class="icon-box icon-box-bg-4">
-                                    <i class="piloz-gear"></i>
-                                </div>
-                            </div>
-                            <div class="text">
-                                <h3>Time-Saving Automation</h3>
-                                <p>Eliminate manual entry and streamline reimbursements.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="cta-two">
-            <img src="{% static 'images/shapes/cta-2-shape-1.png'%}" class="cta-two__bg-shape-1" alt="">
-            <div class="container">
-                <div class="row">
-                    <div class="col-xl-6">
-                        <div class="cta-two__content">
-                            <div class="block-title cus-pb">
-                                <p>Our App Feature Lists</p>
-                                <h3>Discover Tools for<br>Your Needs</h3>
-                            </div>
-                            <div class="cta-two__text">
-                                <p>With more than 50k+ students actively using every month and over 150k+ total installs, we have made our best efforts in building the platform.</p>
-                            </div>
-                            <ul class="list-unstyled cta-two__list">
-                                <li>
-                                    <i class="fa fa-check-circle"></i>
-                                    Instant Expense Logging
-                                </li>
-                                <li>
-                                    <i class="fa fa-check-circle"></i>
-                                    One-Click Reports
-                                </li>
-                                <li>
-                                    <i class="fa fa-check-circle"></i>
-                                    Spending Analytics
-                                </li>
-                                <li>
-                                    <i class="fa fa-check-circle"></i>
-                                    Cloud Security
-                                </li>
-                            </ul>
-                            <a href="#" class="thm-btn cta-two__btn"><span>App Store</span></a>
-                            <a href="#" class="thm-btn cta-two__btn"><span>PlayStore</span></a>
-                        </div>
-                    </div>
-                    <div class="col-xl-6">
-                        <div class="cta-two__moc wow fadeInLeft" data-wow-duration="1500ms">
-                            <img src="{% static 'images/banner/banner-img-1.png'%}" class="cta-one__moc-img" alt="">
-                        </div>
-                    </div><!-- /.col-xl-6 -->
-
-                </div>
-            </div>
-        </section>
-
-        
-
-        <section class="app-shot-one" id="screens">
-            <div class="container-fluid">
-                <div class="block-title text-center">
-                    <p>Check Before Choosing</p>
-                    <h3>App Screenshots</h3>
-                </div><!-- /.block-title -->
-
-                <div class="app-shot-one__carousel owl-theme owl-carousel thm__owl-carousel owl-dot-type1" data-options='{ "loop": true, "margin": 30, "nav": false, "dots": true, "autoWidth": false, "autoplay": true, "smartSpeed": 700, "autoplayTimeout": 5000, "autoplayHoverPause": true, "slideBy": 5, "responsive": {
-                    "0": { "items": 1 },
-                    "480": { "items": 2 },
-                    "600": { "items": 3 },
-                    "991": { "items": 4 },
-                    "1000": { "items": 5 },
-                    "1200": { "items": 5 }
-                }}'>
-
-                    <div class="item">
-                        <img src="{% static 'images/app-shots/11.jpg'%}" alt="Awesome Image" style="border-radius: 25px;"/>
-                    </div><!-- /.item -->
-                    <div class="item">
-                        <img src="{% static 'images/app-shots/22.jpg'%}" alt="Awesome Image" style="border-radius: 25px;"/>
-                    </div><!-- /.item -->
-                    <div class="item">
-                        <img src="{% static 'images/app-shots/33.jpg'%}" alt="Awesome Image" style="border-radius: 25px;"/>
-                    </div><!-- /.item -->
-                    <div class="item">
-                        <img src="{% static 'images/app-shots/44.jpg'%}" alt="Awesome Image" style="border-radius: 25px;"/>
-                    </div><!-- /.item -->
-                    <div class="item">
-                        <img src="{% static 'images/app-shots/55.jpg'%}" alt="Awesome Image" style="border-radius: 25px;"/>
-                    </div><!-- /.item -->
-                    <div class="item">
-                        <img src="{% static 'images/app-shots/66.jpg' %}" alt="Awesome Image" style="border-radius: 25px;"/>
-                    </div><!-- /.item -->
-                    <div class="item">
-                        <img src="{% static 'images/app-shots/77.jpg' %}" alt="Awesome Image" style="border-radius: 25px;"/>
-                    </div><!-- /.item -->
-                    <div class="item">
-                        <img src="{% static 'images/app-shots/88.jpg' %}" alt="Awesome Image" style="border-radius: 25px;"/>
-                    </div><!-- /.item -->
-
-                    </div><!-- /.item -->
-                </div><!-- /.app-shot-one__carousel owl-theme owl-carousel -->
-
-            </div><!-- /.container-fluid -->
-        </section><!-- /.app-shot-one -->
-
-
-        
-
-        <section class="mailchimp-one">
-            <div class="container wow fadeInUp" data-wow-duration="1500ms">
-                <div class="inner-container">
-                    <div class="mailchimp-one-title">
-                        <h2>Reach Out to us at <a href="mailto:info@innothrivetechnologies.in" style="color: white;">info@innothrivetechnologies.in</a></h2>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <footer class="site-footer">
-            <div class="site-footer-bg" style="background-image: url({% static 'images/resources/footer-bg-shape-1.png'%})">
-            </div>
-            <div class="container">
-                <div class="row">
-                    <div class="col-xl-12">
-                        <div class="footer-upper text-center">
-                            <div class="footer-logo">
-                                <img src="{% static 'images/bizmittwhite.png'%}" alt="Footer Logo">
-                            </div>
-                            <ul class="footer-widget__social">
-                                <li><a href="#"><i class="fab fa-twitter"></i></a></li>
-                                <li><a href="#" class="color-1"><i class="fab fa-facebook"></i></a></li>
-                            </ul>
-                            <div class="footer-menu">
-                                <ul>
-                                    <li><a href="#">Home</a></li>
-                                    <li><a href="#">Features</a></li>
-                                    
-                                    <li><a href="{% url 'privacypolicy' %}">Privacy Policy</a></li>
-                                    <li><a href="{% url 'termsandcondition' %}">Terms & Conditions</a></li>
-                                    <li><a href="{% url 'refundpolicy' %}">Refund Policy</a></li>
-
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="site-footer__bottom">
-                <div class="container text-center">
-                    <p>© Copyright 2024 by <a href="#">InnoThrive Technologies</a></p>
-                </div><!-- /.container -->
-            </div>
-        </footer>
-
-    </div><!-- /.page-wrapper -->
-
-
-    <a href="#" data-target="html" class="scroll-to-target scroll-to-top"><i class="fa fa-angle-up"></i></a>
-
-
-    <div class="side-menu__block">
-        <div class="side-menu__block-overlay custom-cursor__overlay">
-            <div class="cursor"></div>
-            <div class="cursor-follower"></div>
-        </div>
-        <div class="side-menu__block-inner ">
-            <div class="side-menu__top justify-content-end">
-                <a href="#" class="side-menu__toggler side-menu__close-btn">
-                    <img src="{% static 'images/shapes/close-1-1.png' %}" alt="">
-                </a>
-            </div>
-            <nav class="mobile-nav__container">
-                <!-- content is loading via js -->
-            </nav>
-            <div class="side-menu__sep"></div><!-- /.side-menu__sep -->
-            <div class="side-menu__content">
-                <p>Need Help or Want to Reach out to us?</p>
-                <p>
-                    <a href="mailto:info@innothrivetechnologies.in">info@innothrivetechnologies.in</a><br>
-                </p>
-                <div class="side-menu__social">
-                    <a href="#"><i class="fab fa-facebook-square"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                </div>
-            </div>
-        </div>
+<body data-theme="light">
+  <div class="site-wrapper overflow-hidden ">
+    <div id="loading">
+      <img src="{% static 'image/preloader.gif'%}" alt="">
     </div>
-
-    <script src="{% static 'js/jquery-3.5.0.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap-select.min.js' %}"></script>
-    <script src="{% static 'js/bootstrap-datepicker.min.js' %}"></script>
-    <script src="{% static 'js/isotope.js' %}"></script>
-    <script src="{% static 'js/jquery.ajaxchimp.min.js' %}"></script>
-    <script src="{% static 'js/jquery.waypoints.min.js' %}"></script>
-    <script src="{% static 'js/jquery.counterup.min.js' %}"></script>
-    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
-    <script src="{% static 'js/jquery.validate.min.js' %}"></script>
-    <script src="{% static 'js/owl.carousel.min.js' %}"></script>
-    <script src="{% static 'js/TweenMax.min.js' %}"></script>
-    <script src="{% static 'js/swiper.min.js' %}"></script>
-    <script src="{% static 'js/wow.js' %}"></script>
-    <script src="{% static 'js/jquery.easing.min.js' %}"></script>
-    <script src="{% static 'js/theme.js' %}"></script>
-
+    <!-- Header Area -->
+    <!-- Header Area -->
+    <header class="site-header site-header--menu-right px-7 px-lg-10 z-index-99 dynamic-sticky-bg site-header--absolute site-header--sticky">
+      <div class="container-fluid">
+        <nav class="navbar site-navbar offcanvas-active navbar-expand-lg  px-0">
+          <!-- Brand Logo-->
+          <div class="brand-logo mt-3 mt-md-0"><a href="{% url 'home' %}">
+              <!-- light version logo (logo must be black)-->
+              <img src="{% static 'image/bizmitt.png'%}" alt="" class="light-version-logo" style="width:200px;">
+              <!-- Dark version logo (logo must be White)-->
+              <img src="{% static 'image/bizmitt.png'%}" alt="" class="dark-version-logo" style="width:200px;">
+            </a></div>
+          <div class="collapse navbar-collapse" id="mobile-menu">
+            <div class="navbar-nav-wrapper">
+              <ul class="navbar-nav main-menu">
+                
+               
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'home' %}" role="button" aria-expanded="false">Home</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#Features" role="button" aria-expanded="false">Features</a>
+                </li>
+                
+                <li class="nav-item">
+                  <a class="nav-link" href="#Screens" role="button" aria-expanded="false">Screens</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#reviews" role="button" aria-expanded="false">Customer Reviews</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#contactus" role="button" aria-expanded="false">Contact us</a>
+                </li>
+                
+              </ul>
+            </div>
+            <button class="d-block d-lg-none offcanvas-btn-close" type="button" data-toggle="collapse" data-target="#mobile-menu" aria-controls="mobile-menu" aria-expanded="true" aria-label="Toggle navigation">
+              <i class="gr-cross-icon"></i>
+            </button>
+          </div>
+          <div class="header-btn ml-auto ml-lg-6 d-none d-sm-block">
+            <a class="btn btn btn-pumpkin btn-sm-2 rounded-5 h-50 font-size-5 font-weight-bold" href="#">
+               Download App
+            </a>
+          </div>
+          <!-- Mobile Menu Hamburger-->
+          <button class="navbar-toggler btn-close-off-canvas  hamburger-icon border-0" type="button" data-toggle="collapse" data-target="#mobile-menu" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation">
+            <!-- <i class="icon icon-simple-remove icon-close"></i> -->
+            <span class="hamburger hamburger--squeeze js-hamburger">
+          <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+            </span>
+            </span>
+          </button>
+          <!--/.Mobile Menu Hamburger Ends-->
+        </nav>
+      </div>
+    </header>
+    <!-- navbar- -->
+    <!-- End Header Area -->
+    <!-- heroSix Area -->
+    <div class="position-relative pt-25 pt-md-31 pt-lg-35 pb-15 pb-md-19 pb-lg-33 position-relative overflow-hidden">
+      <div class="container position-static">
+        <div class="row align-items-center justify-content-center position-static">
+          <!-- Hero Image -->
+          <div class="col-xl-6 col-lg-6 col-md-9 col-xs-8 position-static">
+            <div class="l6-hero-image-group">
+              <img class="w-100" src="{% static 'image/home-6/png/hero-mobile.png'%}" alt="" data-aos="fade-up" data-aos-once="true">
+              <div class="img-1">
+                <img class="w-100" src="{% static 'image/home-6/png/cirle-yellow-shape.png'%}" alt="" data-aos="fade-right" data-aos-delay="300" data-aos-once="true">
+              </div>
+            </div>
+          </div>
+          <!-- End Hero Image -->
+          <!-- Hero Content -->
+          <div class="col-lg-6 col-md-9 col-sm-11">
+            <div class="mt-8 mt-lg-0 pr-md-11 pr-lg-0 pr-xl-10" data-aos="fade-left" data-aos-delay="500" data-aos-once="true">
+              <h1 class="font-size-13 mb-8 pr-xs-31 pr-sm-21 pr-md-10 pr-lg-0 line-height-84">Take your business to next level.</h1>
+              <p class="font-size-7 mb-0 pr-sm-10 pr-md-10 pr-lg-0 pr-xl-18">Your app is your tool for better solution with your followers, making it easier for them to keep up to date.</p>
+              <div class="mt-10">
+                <a class="btn btn-dark-green btn-3 rounded-5" href="#">Request Free Access</a>
+              </div>
+            </div>
+          </div>
+          <!-- End Hero Content -->
+        </div>
+      </div>
+      <div class="absolute-bottom-right mb-13 mb-md-17 mb-lg-26 d-none d-sm-block mr-n25 mr-md-n15 mr-lg-n7" data-aos="fade-left" data-aos-delay="500" data-aos-once="true">
+        <img class="w-50 w-md-75 w-lg-100" src="{% static 'image/home-6/png/hero-shape.png'%}" alt="">
+      </div>
+    </div>
+    <!-- End heroSix Area -->
+    <!-- videoLink Area -->
+    <div class="bg-purple-heart py-10">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-12">
+            <div class="text-center" data-aos="fade-up" data-aos-duration="500" data-aos-once="true">
+              <a class="video-btn text-white font-size-6 mb-0" href="#">
+                <span class="text-golden-yellow mr-3">
+                                <i
+                                class="fa fa-play-circle"></i>
+                            </span> Finity takes only 5 mins to setup your mobile app
+                from
+                website.</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End videoLink Area -->
+    <!-- featureSection Area -->
+    <div class="pt-14 pt-md-18 pt-lg-26 pb-14 pb-md-18 pb-lg-26 bg-default-6" id="Features">
+      <div class="container">
+        <div class="row justify-content-center justify-content-lg-start">
+          <div class="col-xl-6 col-lg-7 col-md-8">
+            <div class="mb-0 px-xs-15 px-md-0 mb-10 text-center text-lg-left" data-aos="fade-up" data-aos-delay="400" data-aos-once="true">
+              <h2 class="font-size-11">Bizmitt Great Features</h2>
+            </div>
+          </div>
+        </div>
+        <div class="row align-items-center justify-content-center">
+          <div class="col-xl-6 col-lg-7 col-md-8 order-2 order-lg-1">
+            <div class="">
+              <!-- Services -->
+              <div class="row justify-content-center">
+                <div class="col-sm-6 col-xs-7">
+                  <div class="pt-13 pt-lg-15 pr-sm-0 pr-xs-10" data-aos="fade-up" data-aos-duration="500" data-aos-once="true">
+                    <div class="square-60 bg-blue-3 shadow-dodger-blue-3 rounded-10 text-white font-size-7">
+                      <i class="fa fa-link"></i>
+                    </div>
+                    <div class="mt-12 pr-lg-10 pr-md-0 pr-xs-8">
+                      <h4 class="font-size-7 mb-5">Instant Expense Logging</h4>
+                      <p class="font-size-5 mb-0">Quickly capture all business expenses on-the-go.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 col-xs-7">
+                  <div class="pt-13 pt-lg-15 pr-sm-0 pr-xs-10" data-aos="fade-up" data-aos-duration="500" data-aos-delay="300" data-aos-once="true">
+                    <div class="square-60 bg-sunset shadow-sunset rounded-10 text-white font-size-7">
+                      <i class="fa fa-level-up-alt"></i>
+                    </div>
+                    <div class="mt-12 pr-lg-10 pr-md-0 pr-xs-8">
+                      <h4 class="font-size-7 mb-5">One-Click Reports</h4>
+                      <p class="font-size-5 mb-0">Generate and export expense reports effortlessly.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 col-xs-7">
+                  <div class="pt-13 pt-lg-15 pr-sm-0 pr-xs-10" data-aos="fade-up" data-aos-duration="500" data-aos-delay="600" data-aos-once="true">
+                    <div class="square-60 bg-light-green shadow-light-green rounded-10 text-white font-size-7">
+                      <i class="fa fa-hourglass-half"></i>
+                    </div>
+                    <div class="mt-12 pr-lg-10 pr-md-0 pr-xs-8">
+                      <h4 class="font-size-7 mb-5">Spending Analytics</h4>
+                      <p class="font-size-5 mb-0">Gain insights into expense patterns across categories.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6 col-xs-7">
+                  <div class="pt-13 pt-lg-15 pr-sm-0 pr-xs-10" data-aos="fade-up" data-aos-duration="500" data-aos-delay="900" data-aos-once="true">
+                    <div class="square-60 bg-dodger-blue-1 shadow-dodger-blue-1 rounded-10 text-white font-size-7">
+                      <i class="fa fa-link"></i>
+                    </div>
+                    <div class="mt-12 pr-lg-10 pr-md-0 pr-xs-8">
+                      <h4 class="font-size-7 mb-5">Time-Saving Automation</h4>
+                      <p class="font-size-5 mb-0">Eliminate manual entry and streamline reimbursements.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- End Services -->
+            </div>
+          </div>
+          <div class="col-xl-6 col-lg-5 col-md-8 order-1 order-lg-2">
+            <div class="mt-lg-16 mr-lg-n20 mr-xl-n25" data-aos="fade-left" data-aos-delay="500" data-aos-once="true">
+              <img class="w-100" src="{% static 'image/home-6/png/feature-right-img.png'%}" alt="">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End featureSection Area -->
+    <!-- contentOne Area -->
+    <div class="pt-23 pt-md-25 pt-lg-35 pb-9 pb-md-14 pb-lg-33 overflow-hidden position-relative">
+      <div class="container">
+        <div class="row align-items-center justify-content-center justify-content-lg-start">
+          <!-- Image Section -->
+          <div class="col-xl-5 col-xs-4">
+            <div class="l6-content-image-group">
+              <div class="img-1">
+                <img class="w-100" src="{% static 'image/home-6/png/green-dot-pattern.png'%}" alt="" data-aos="fade-down" data-aos-duration="500" data-aos-delay="300" data-aos-once="true">
+              </div>
+              <div class="img-2">
+                <img class="w-100" src="{% static 'image/home-6/png/content-1-mobile.png'%}" alt="" data-aos="fade-right" data-aos-duration="500" data-aos-once="true">
+              </div>
+            </div>
+          </div>
+          <!-- Content Section -->
+          <div class="col-lg-6 col-md-8 col-xs-10 ml-lg-10 ml-xl-10">
+            <div class="pt-7 pb-7 pb-lg-17 pl-sm-5 pl-md-9 pl-lg-10">
+              <h2 class="font-size-11 mb-9" data-aos="fade-up" data-aos-duration="500" data-aos-once="true">Get data live <br class="d-none d-xs-block"> on your mobile</h2>
+              <p class="font-size-7 mb-0 pr-xl-13" data-aos="fade-up" data-aos-duration="500" data-aos-delay="300" data-aos-once="true">Your app is your tool for better solution with your followers, making it
+                easier
+                for them to keep up to date.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End contentOne Area -->
+    <!-- contentTwo Area -->
+    <div class="bg-default-6 pt-14 pt-md-19 pt-lg-34 pb-9 pb-md-14 pb-lg-34 overflow-hidden position-relative">
+      <div class="container">
+        <div class="row align-items-center justify-content-center justify-content-lg-start">
+          <!-- Content Section -->
+          <div class="col-xl-5 col-lg-6 col-md-8 col-xs-10 order-2 order-md-1">
+            <div class="pt-7 pb-7 pr-sm-5 pr-md-9 pr-lg-0">
+              <h2 class="font-size-11 mb-9 pr-sm-18 pr-md-10 pr-lg-5 pr-xl-5" data-aos="fade-up" data-aos-duration="500" data-aos-once="true">Real-time data from dashboard.</h2>
+              <p class="font-size-7 mb-0" data-aos="fade-up" data-aos-duration="500" data-aos-delay="300" data-aos-once="true">Your app is your tool for better solution with your followers, making it
+                easier
+                for them to keep up to date.</p>
+            </div>
+          </div>
+          <!-- Content Image Section -->
+          <div class="col-xl-6 offset-xl-1 col-lg-6 col-xs-4 order-1 order-md-2">
+            <div class="l6-content-image-group-2 ml-lg-18">
+              <div class="img-1">
+                <img class="w-100" src="{% static 'image/home-6/png/yellow-small-shape.png'%}" alt="" data-aos="fade-up" data-aos-duration="500" data-aos-delay="300" data-aos-once="true">
+              </div>
+              <div class="img-2">
+                <img class="w-100" src="{% static 'image/home-6/png/content-2-mobile.png'%}" alt="" data-aos="fade-right" data-aos-duration="500" data-aos-once="true">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End contentTwo Area -->
+    <!-- contentTwo Area -->
+    <div class="pt-23 pt-md-25 pt-lg-33 pb-11 pb-md-14 pb-lg-33 overflow-hidden position-relative">
+      <div class="container">
+        <div class="row align-items-center justify-content-center justify-content-lg-start">
+          <div class=" col-lg-5 col-md-4 col-xs-5">
+            <div class="l6-content-image-group-3 mr-md-0 mr-lg-15 mr-xl-12">
+              <div class="img-1">
+                <img class="w-100" src="{% static 'image/home-6/png/green-shape.png'%}" alt="" data-aos="fade-down" data-aos-duration="500" data-aos-delay="300" data-aos-once="true">
+              </div>
+              <div class="img-2">
+                <img class="w-100" src="{% static 'image/home-6/png/content-3-mobile.png'%}" alt="" data-aos="fade-right" data-aos-duration="500" data-aos-once="true">
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-6 col-lg-7 col-md-8 col-xs-10 ml-xl-19">
+            <div class="pt-5 pb-7 pr-sm-5 pr-md-0 ml-md-10 ml-xl-0">
+              <h2 class="font-size-11 mb-9 pr-xs-10 pr-md-0" data-aos="fade-up" data-aos-duration="500" data-aos-once="true">Data is secured & safe every second.</h2>
+              <p class="font-size-7 mb-0 pr-lg-0 pr-xl-22" data-aos="fade-up" data-aos-duration="500" data-aos-delay="300" data-aos-once="true">Your app is your tool for better solution with your followers, making it
+                easier
+                for them to keep up to date.</p>
+              <div class="mt-13" data-aos="fade-up" data-aos-duration="500" data-aos-once="true">
+                <a class="btn btn-dark-green btn-3 rounded-5" href="#">Request Free Access</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End contentTwo Area -->
+    <!-- screenShot Area -->
+    <div class="bg-purple-heart pt-14 pb-15 pt-md-17 pb-md-19 pt-lg-25 pb-lg-26" id="Screens">
+      <div class="container">
+        <!-- Section Title -->
+        <div class="row justify-content-center">
+          <div class="col-xl-7 col-lg-8 col-md-10">
+            <div class="text-center dark-mode-texts mb-8 mb-lg-18">
+              <h2 class="font-size-11">Inside our app</h2>
+              <p class="font-size-7 mb-0 opacity-7">Sophisticated styling with exceptional comfort. Super-soft, pressure-relieving earpads in foamed urethane.</p>
+            </div>
+          </div>
+        </div>
+        <!-- End Section Title -->
+      </div>
+      <!-- Screenshot Area -->
+      <div class="screenshot-slider-wrapper mb-5">
+        <div class="screenshot-slider">
+          <!-- single-slide Area -->
+          <div class="single-slide focus-reset">
+            <div class="screenshot-image">
+              <img src="{% static 'image/home-6/png/screenshot-1.png'%}" alt="" />
+            </div>
+          </div>
+          <!-- / .single-slide Area -->
+          <!-- single-slide Area -->
+          <div class="single-slide focus-reset">
+            <div class="screenshot-image">
+              <img src="{% static 'image/home-6/png/screenshot-2.png'%}" alt="" />
+            </div>
+          </div>
+          <!-- / .single-slide Area -->
+          <!-- single-slide Area -->
+          <div class="single-slide focus-reset">
+            <div class="screenshot-image">
+              <img src="{% static 'image/home-6/png/screenshot-3.png'%}" alt="" />
+            </div>
+          </div>
+          <!-- / .single-slide Area -->
+          <!-- single-slide Area -->
+          <div class="single-slide focus-reset">
+            <div class="screenshot-image">
+              <img src="{% static 'image/home-6/png/screenshot-4.png'%}" alt="" />
+            </div>
+          </div>
+          <!-- / .single-slide Area -->
+          <!-- single-slide Area -->
+          <div class="single-slide focus-reset">
+            <div class="screenshot-image">
+              <img src="{% static 'image/home-6/png/screenshot-5.png'%}" alt="" />
+            </div>
+          </div>
+          <!-- / .single-slide Area -->
+          <!-- Screenshot Area -->
+          <div class="single-slide focus-reset">
+            <div class="screenshot-image">
+              <img src="{% static 'image/home-6/png/screenshot-6.png'%}" alt="" />
+            </div>
+          </div>
+        </div>
+        <!-- / .Screenshot Area -->
+        <div class="phone-bg-img">
+          <img src="{% static 'image/home-6/png/mobile-frame.png'%}" alt="" />
+        </div>
+      </div>
+      <div class="screenshots-dots pt-5 pt-md-10"></div>
+      <!-- / .Screenshot Area -->
+    </div>
+    <!-- End screenShot Area -->
+    <!-- Testimonial Area -->
+    <div class="pt-14 pt-md-18 pt-lg-24 pb-15 pb-md-19 pb-lg-28 position-relative" id="reviews">
+      <div class="l6-shape-2 absolute-top-right mt-28 mr-n15">
+        <img src="{% static 'image/home-6/png/l6-cutomer-review-shape.png'%}" alt="">
+      </div>
+      <div class="container">
+        <!-- Section Title -->
+        <div class="row justify-content-center">
+          <div class="col-xl-7 col-lg-8 col-md-10">
+            <div class="text-center mb-13 mb-lg-21">
+              <h2 class="font-size-11 mb-7">Customers loving it</h2>
+              <p class="font-size-7 mb-0 px-xl-10">Your app is your tool for better solution with your
+                followers, making it easier for them to keep up to date.</p>
+            </div>
+          </div>
+        </div>
+        <!-- End Section Title -->
+        <div class="row">
+          <div class="col-12">
+            <div class="l6-testimonial">
+              <!-- Single Testimonial -->
+              <div class="single-testimoial bg-white border border-default-color-5 rounded-10 pt-7 pb-7 pt-sm-11 pt-md-11 pb-sm-10 pb-md-10 pl-7 pl-sm-11 pl-md-11 pr-7 pr-md-12 mx-md-6 focus-reset">
+                <div class="mb-10">
+                  <img src="{% static 'image/home-6/png/l6-review-star.png'%}" alt="">
+                </div>
+                <p class="font-size-8 mb-13 pr-sm-5 pr-md-0 pr-xl-4 text-dark-cloud">Your app is your tool for better solution with your followers, making it easier for them to keep up to date.</p>
+                <div class="d-flex align-items-center">
+                  <div class="mr-6">
+                    <img src="{% static 'image/home-6/png/user-img-1.png'%}" alt="">
+                  </div>
+                  <div class="info">
+                    <h5 class="font-size-7 text-dark-cloud mb-0">Alena Herwitz</h5>
+                    <p class="font-size-5 text-stone mb-0">www.magsite.com</p>
+                  </div>
+                </div>
+              </div>
+              <!-- End Single Testimonial -->
+              <!-- Single Testimonial -->
+              <div class="single-testimoial bg-white border border-default-color-5 rounded-10 pt-7 pb-7 pt-sm-11 pt-md-11 pb-sm-10 pb-md-10 pl-7 pl-sm-11 pl-md-11 pr-7 pr-md-12 mx-md-6 focus-reset">
+                <div class="mb-10">
+                  <img src="{% static 'image/home-6/png/l6-review-star.png'%}" alt="">
+                </div>
+                <p class="font-size-8 mb-13 pr-sm-5 pr-md-0 pr-xl-4 text-dark-cloud">Your app is your tool for better solution with your followers, making it easier for them to keep up to date.</p>
+                <div class="d-flex align-items-center">
+                  <div class="mr-6">
+                    <img src="{% static 'image/home-6/png/user-img-2.png'%}" alt="">
+                  </div>
+                  <div class="info">
+                    <h5 class="font-size-7 text-dark-cloud mb-0">Maren Westervelt</h5>
+                    <p class="font-size-5 text-stone mb-0">www.itsmaren.net</p>
+                  </div>
+                </div>
+              </div>
+              <!-- End Single Testimonial -->
+              <!-- Single Testimonial -->
+              <div class="single-testimoial bg-white border border-default-color-5 rounded-10 pt-7 pb-7 pt-sm-11 pt-md-11 pb-sm-10 pb-md-10 pl-7 pl-sm-11 pl-md-11 pr-7 pr-md-12 mx-md-6 focus-reset">
+                <div class="mb-10">
+                  <img src="{% static 'image/home-6/png/l6-review-star.png'%}" alt="">
+                </div>
+                <p class="font-size-8 mb-13 pr-sm-5 pr-md-0 pr-xl-4 text-dark-cloud">Your app is your tool for better solution with your followers, making it easier for them to keep up to date.</p>
+                <div class="d-flex align-items-center">
+                  <div class="mr-6">
+                    <img src="{% static 'image/home-6/png/user-img-1.png'%}" alt="">
+                  </div>
+                  <div class="info">
+                    <h5 class="font-size-7 text-dark-cloud mb-0">Maren Westervelt</h5>
+                    <p class="font-size-5 text-stone mb-0">www.itsmaren.net</p>
+                  </div>
+                </div>
+              </div>
+              <!-- End Single Testimonial -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Testimonial Area -->
+    <!-- PromoArea Area -->
+    <div class="bg-default-6">
+      <div class="container">
+        <div class="border-bottom pt-13 pt-md-18 pt-lg-21 pb-13 pb-md-17 pb-lg-22">
+          <div class="row align-items-center justify-content-center">
+            <div class="col-lg-6 col-md-9">
+              <div class="text-center text-lg-left mb-13 mb-lg-0">
+                <h3 class="font-size-9 mb-7" data-aos="fade-up" data-aos-duration="500" data-aos-once="true">
+                  Download our mobile app.</h3>
+                <p class="font-size-6 mb-0 " data-aos="fade-up" data-aos-duration="500" data-aos-delay="300" data-aos-once="true">Your
+                  app is your tool for better solution with your followers, making it easier for them to keep
+                  up to date.</p>
+              </div>
+            </div>
+            <div class="col-lg-5 offset-xl-1 col-md-8 col-sm-10">
+              <div class="text-center text-lg-left px-10 px-xs-0">
+                <h5 class="font-size-6 text-oxford-blue opacity-7 font-weight-normal mb-7 ml-lg-6" data-aos="fade-up" data-aos-duration="500" data-aos-once="true">Available on</h5>
+                <div class="btn-group text-center text-sm-left d-sm-flex align-items-center justify-content-between flex-wrap flex-sm-nowrap">
+                  <div class="w-100  mb-3 mb-lg-0 mx-auto mx-sm-3 text-center">
+                    <a href="#"><img class="min-w-210 max-h-64" src="{% static 'image/home-6/png/app-store-img.png'%}" alt="" data-aos="fade-up" data-aos-duration="500" data-aos-delay="300" data-aos-once="true"></a>
+                  </div>
+                  <div class="w-100 mb-3 mb-lg-0 mx-auto mx-xs-3">
+                    <a href="#"><img class="min-w-210 max-h-64" src="{% static 'image/home-6/png/play-store-img.png'%}" alt="" data-aos="fade-up" data-aos-delay="500" data-aos-duration="500" data-aos-once="true"></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End PromoArea Area -->
+    <!-- Footer Area -->
+    <footer id="contactus">
+      <div class="bg-default-6 pt-13 pt-lg-23 pb-7 position-relative">
+        <div class="container">
+          <div class="row pb-lg-18">
+            <div class="col-lg-4 col-md-5 col-md-3 col-xs-8">
+              <div class="pr-xl-20 mb-11 mb-lg-0">
+                <div class="brand-logo mb-8">
+                  <a href="javascript:">
+                    <img class="mx-auto mx-0 light-version-logo default-logo" src="{% static 'image/bizmitt.png'%}" alt="" style="width: 200px;">
+                    <img src="{% static 'image/bizmitt.png'%}" alt="" class="dark-version-logo mx-auto mx-0" style="width: 200px;">
+                  </a>
+                </div>
+                <p class="font-size-5 mb-0 heading-default-color pr-xs-15 pr-sm-22 pr-md-10 pr-lg-15 pr-xl-10 opacity-7">Your app is your tool for better solution with your followers, making it easier for them to keep up to date.</p>
+                
+              </div>
+            </div>
+            <div class="col-lg-8">
+              <div class="row">
+                <!-- Single Widgets -->
+                <div class="col-xl-4 col-lg-3 col-md-4 col-xs-6">
+                  <div class="mb-10 mb-lg-0">
+                    <h4 class="font-size-5 opacity-4 mb-10">Quick Links</h4>
+                    <ul class="list-unstyled">
+                     
+                      <li class="mb-7"><a class="font-size-5 text-default-color-2 gr-hover-text-blue-3" href="#Features">Features</a></li>
+                      <li class="mb-7"><a class="font-size-5 text-default-color-2 gr-hover-text-blue-3" href="#Screens">Screens</a></li>
+                      <li class="mb-7"><a class="font-size-5 text-default-color-2 gr-hover-text-blue-3" href="#reviews">Customer Reviews</a></li>
+                    </ul>
+                  </div>
+                </div>
+                <!-- End Single Widgets -->
+                <!-- Single Widgets -->
+                <div class="col-xl-4 col-lg-3 col-md-4 col-xs-6">
+                  <div class="mb-10 mb-lg-0">
+                    <h4 class="font-size-5 opacity-4 mb-10">Support Links</h4>
+                    <ul class="list-unstyled">
+                     
+                      <li class="mb-7"><a class="font-size-5 text-default-color-2 gr-hover-text-blue-3" href="{% url 'termsandcondition' %}" target="_blank">Terms & Conditions</a></li>
+                      <li class="mb-7"><a class="font-size-5 text-default-color-2 gr-hover-text-blue-3" href="{% url 'privacypolicy' %}" target="_blank">Privacy Policy</a></li>
+                      <li class="mb-7"><a class="font-size-5 text-default-color-2 gr-hover-text-blue-3" href="{% url 'refundpolicy' %}" target="_blank">Refund Policy</a></li>
+                      
+                    </ul>
+                  </div>
+                </div>
+                <!-- End Single Widgets -->
+                <!-- Single Widgets -->
+                <div class="col-xl-4 col-lg-5 col-md-4 col-xs-8">
+                  <div class="mb-10 mb-lg-0">
+                    <h4 class="font-size-5 opacity-4 mb-10">Contact Us</h4>
+                    <ul class="footer-social-link d-flex align-items-center justify-content-between list-unstyled flex-wrap mb-10">
+                      <li class="mb-7"><a class="font-size-5 text-default-color-2 gr-hover-text-blue-3" href="#" target="_blank">info@bizmitt.com</a></li>
+                      <li class="mb-7"><a class="font-size-5 text-default-color-2 gr-hover-text-blue-3" href="#" target="_blank">info@innothrivetechnologies.in</a></li>
+                      
+                    </ul>
+                  </div>
+                  
+                </div>
+                <!-- End Single Widgets -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- End Footer Area -->
+  </div>
+  <!-- Vendor Scripts -->
+  <script src="{% static 'js/vendor.min.js' %}"></script>
+  <!-- Plugin's Scripts -->
+  <script src="{% static 'plugins/fancybox/jquery.fancybox.min.js' %}"></script>
+  <script src="{% static 'plugins/nice-select/jquery.nice-select.min.js' %}"></script>
+  <script src="{% static 'plugins/aos/aos.min.js' %}"></script>
+  <script src="{% static 'plugins/slick/slick.min.js' %}"></script>
+  <script src="{% static 'plugins/counter-up/jquery.counterup.min.js' %}"></script>
+  <script src="{% static 'plugins/counter-up/jquery.waypoints.min.js' %}"></script>
+  <!-- Activation Script -->
+  <script src="{% static 'js/custom.js' %}"></script>
 </body>
 
 

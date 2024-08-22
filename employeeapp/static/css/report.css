@@ -1,0 +1,45 @@
+
+body {
+    background: #eee;
+    font-family: 'Roboto', sans-serif;
+    -webkit-print-color-adjust: exact !important;
+}
+
+.container {
+    background: white;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.invoice-letter {
+    background-color: #04617B;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.table th, .table td {
+    border: 1px solid black !important;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-borderless th, .table-borderless td {
+    border: none !important;
+    text-align: left;
+    padding: 5px;
+}
+
+@media print {
+    body {
+    font-size: 12px;
+    }
+    .container {
+    padding: 10px;
+    margin: 0;
+    }
+}
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { border: 1px solid black; padding: 8px; text-align: left; }
+/* Add more necessary styles */
