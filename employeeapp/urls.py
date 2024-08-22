@@ -35,5 +35,7 @@ urlpatterns = [
     path('api/viewreport/', views.Viewreport.as_view()),
     path('api/archivereport/', views.Archivereport.as_view()),
     path('api/subscriptionrenewal/', views.Subscriptionrenewal.as_view()),
+    path('api/subscriptioncondition/', views.Subscriptioncondition.as_view()),
     path('api/resetdata/', views.Resetdata.as_view()),
+    path('api/pdfreport/', views.pdfreport, name='pdfreport'),
 ]
